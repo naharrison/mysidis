@@ -11,4 +11,5 @@ mm2_corr.ps <br />
 pip_MX.pdf <br />
 pim_MX.pdf <br />
 note_momcorr.pdf <br />
-shortScripts\/ <br />
+part of shortScripts\/ <br />
+and of course the actual dataset <br />
