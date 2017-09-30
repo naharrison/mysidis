@@ -32,8 +32,8 @@ float corrYmax = 10.0;
 
 for(int is = 0; is < nSec; is++)
 {
-	TFile *tfdata = new TFile(Form("/home/kjgroup/mysidis/histos/data.s1.n4000.BiSc5.MoCo11.__0000000000000000__es%i.root", is+1));
-	TFile *tfmc = new TFile(Form("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n12000.BiSc5.__0000000000000000__es%i.root", is+1));
+	TFile *tfdata = new TFile(Form("/home/harrison/mysidis-histos/data.s1.n4000.BiSc5.MoCo11.__0000000000000000__es%i.root", is+1));
+	TFile *tfmc = new TFile(Form("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n12000.BiSc5.__0000000000000000__es%i.root", is+1));
 
 	hdataphih[is] = (TH1F*) tfdata->Get(Form("rec_%s_phih_x%i_QQ%i_z%i_PT2%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin));
 	can->cd(is+1);

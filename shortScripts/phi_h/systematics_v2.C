@@ -49,60 +49,60 @@ TH1F *hAcc_sysEcontributions = new TH1F(AccString.c_str(), AccString.c_str(), Ns
 TH1F *hCategory = new TH1F(catString.c_str(), catString.c_str(), 1, 0, 1);
 
 TFile *tfdata[Nsources][variationsPerSource];
-tfdata[0][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__-1000000000000000__.root");
-tfdata[0][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__1000000000000000__.root");
-tfdata[1][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0-100000000000000__.root");
-tfdata[1][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0100000000000000__.root");
-tfdata[2][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__00-10000000000000__.root");
-tfdata[2][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0010000000000000__.root");
-tfdata[3][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__000-1000000000000__.root");
-tfdata[3][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0001000000000000__.root");
-tfdata[4][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000-100000000000__.root");
-tfdata[4][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000100000000000__.root");
-tfdata[5][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__00000-10000000000__.root");
-tfdata[5][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000010000000000__.root");
-tfdata[6][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__000000-1000000000__.root");
-tfdata[6][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000001000000000__.root");
-tfdata[7][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__00000000-10000000__.root"); // note: skipping some on purpose (not testing systematics for those)
-tfdata[7][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000010000000__.root");
-tfdata[8][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000-100-100__.root");
-tfdata[8][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000100100__.root");
-tfdata[9][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__00000000000-100-10__.root");
-tfdata[9][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000010010__.root");
-tfdata[10][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // [10] is for testing phih cuts (bins with a phih cut only)... don't change the number!
-tfdata[10][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
-tfdata[11][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // for acc. model dependence. See note below (at tfmc[11][0])!!
-tfdata[11][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
-tfdata[12][0] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // for hap. model dependence. See note below (at tfmc[12][0])!!
-tfdata[12][1] = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
+tfdata[0][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__-1000000000000000__.root");
+tfdata[0][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__1000000000000000__.root");
+tfdata[1][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0-100000000000000__.root");
+tfdata[1][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0100000000000000__.root");
+tfdata[2][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__00-10000000000000__.root");
+tfdata[2][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0010000000000000__.root");
+tfdata[3][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__000-1000000000000__.root");
+tfdata[3][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0001000000000000__.root");
+tfdata[4][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000-100000000000__.root");
+tfdata[4][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000100000000000__.root");
+tfdata[5][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__00000-10000000000__.root");
+tfdata[5][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000010000000000__.root");
+tfdata[6][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__000000-1000000000__.root");
+tfdata[6][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000001000000000__.root");
+tfdata[7][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__00000000-10000000__.root"); // note: skipping some on purpose (not testing systematics for those)
+tfdata[7][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000010000000__.root");
+tfdata[8][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000-100-100__.root");
+tfdata[8][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000100100__.root");
+tfdata[9][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__00000000000-100-10__.root");
+tfdata[9][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000010010__.root");
+tfdata[10][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // [10] is for testing phih cuts (bins with a phih cut only)... don't change the number!
+tfdata[10][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
+tfdata[11][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // for acc. model dependence. See note below (at tfmc[11][0])!!
+tfdata[11][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
+tfdata[12][0] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root"); // for hap. model dependence. See note below (at tfmc[12][0])!!
+tfdata[12][1] = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
 
 TFile *tfmc[Nsources][variationsPerSource];
-tfmc[0][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__-1000000000000000__.root");
-tfmc[0][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__1000000000000000__.root");
-tfmc[1][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0-100000000000000__.root");
-tfmc[1][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0100000000000000__.root");
-tfmc[2][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00-10000000000000__.root");
-tfmc[2][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0010000000000000__.root");
-tfmc[3][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__000-1000000000000__.root");
-tfmc[3][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0001000000000000__.root");
-tfmc[4][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000-100000000000__.root");
-tfmc[4][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000100000000000__.root");
-tfmc[5][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000-10000000000__.root");
-tfmc[5][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000010000000000__.root");
-tfmc[6][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__000000-1000000000__.root");
-tfmc[6][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000001000000000__.root");
-tfmc[7][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000000-10000000__.root"); // note: skipping some on purpose (not testing systematics for those)
-tfmc[7][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000010000000__.root");
-tfmc[8][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000-100-100__.root");
-tfmc[8][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000100100__.root");
-tfmc[9][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000000000-100-10__.root");
-tfmc[9][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000010010__.root");
-tfmc[10][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root"); // [10] is for testing phih cuts (bins with a phih cut only)... don't change the number!
-tfmc[10][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
-tfmc[11][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it1.s1.n32255.BiSc5.__0000000000000000__.root"); // need to do a work-around here since there's only one variation... the "loose" one is the variation and the "tight" one is just the nominal case so it won't contribute anything to the error (nominal - tight = 0)... just remember to divide by sqrt(1) instead of sqrt(2)!!
-tfmc[11][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
-tfmc[12][0] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root"); // for hap. model dependence. similar work-around here as above. see below where the haprad files are read in for details
-tfmc[12][1] = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
+tfmc[0][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__-1000000000000000__.root");
+tfmc[0][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__1000000000000000__.root");
+tfmc[1][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0-100000000000000__.root");
+tfmc[1][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0100000000000000__.root");
+tfmc[2][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00-10000000000000__.root");
+tfmc[2][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0010000000000000__.root");
+tfmc[3][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__000-1000000000000__.root");
+tfmc[3][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0001000000000000__.root");
+tfmc[4][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000-100000000000__.root");
+tfmc[4][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000100000000000__.root");
+tfmc[5][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000-10000000000__.root");
+tfmc[5][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000010000000000__.root");
+tfmc[6][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__000000-1000000000__.root");
+tfmc[6][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000001000000000__.root");
+tfmc[7][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000000-10000000__.root"); // note: skipping some on purpose (not testing systematics for those)
+tfmc[7][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000010000000__.root");
+tfmc[8][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000-100-100__.root");
+tfmc[8][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000100100__.root");
+tfmc[9][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__00000000000-100-10__.root");
+tfmc[9][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000010010__.root");
+tfmc[10][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root"); // [10] is for testing phih cuts (bins with a phih cut only)... don't change the number!
+tfmc[10][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
+tfmc[11][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it1.s1.n32255.BiSc5.__0000000000000000__.root"); // need to do a work-around here since there's only one variation... the "loose" one is the variation and the "tight" one is just the nominal case so it won't contribute anything to the error (nominal - tight = 0)... just remember to divide by sqrt(1) instead of sqrt(2)!!
+tfmc[11][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
+tfmc[12][0] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root"); // for hap. model dependence. similar work-around here as above. see below where the haprad files are read in for details
+tfmc[12][1] = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
 
 TLatex *tlat = new TLatex();
 tlat->SetNDC();
@@ -125,8 +125,8 @@ categoryFile.close();
 
 TCanvas *nomcan = new TCanvas();
 
-TFile *tfdataNom = new TFile("/home/kjgroup/mysidis/histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
-TFile *tfmcNom = new TFile("/home/kjgroup/mysidis/histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
+TFile *tfdataNom = new TFile("/home/harrison/mysidis-histos/data.s1.n11625.BiSc5.MoCo11.__0000000000000000__.root");
+TFile *tfmcNom = new TFile("/home/harrison/mysidis-histos/MonteCarlo_v12.it2.s1.n32255.BiSc5.__0000000000000000__.root");
 
 TH1F *hdataphihModified = (TH1F*) tfdataNom->Get(Form("rec_%s_phih_x%i_QQ%i_z%i_PT2%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin));
 
@@ -173,8 +173,8 @@ TH1F *hRC = new TH1F("hRC", "hRC", NphihBins, -180, 180);
 hRC->Sumw2();
 
 string happath;
-if(pipORpim == "pip") happath = Form("/home/kjgroup/mysidis/shortScripts/phi_h/hapradResults/NickPipModel/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
-if(pipORpim == "pim") happath = Form("/home/kjgroup/mysidis/shortScripts/phi_h/hapradResults/NickPimModel/pim_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
+if(pipORpim == "pip") happath = Form("/home/harrison/mysidis/shortScripts/phi_h/hapradResults/NickPipModel/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
+if(pipORpim == "pim") happath = Form("/home/harrison/mysidis/shortScripts/phi_h/hapradResults/NickPimModel/pim_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
 ifstream hapfile(happath.c_str());
 
 if(hapfile)
@@ -321,12 +321,12 @@ hRCS[s][v]->Sumw2();
 string happathS;
 if(s == 12 && v == 0)
 {
-happathS = Form("/home/kjgroup/mysidis/shortScripts/phi_h/hapradResults/hapDefault/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin); // always pip
+happathS = Form("/home/harrison/mysidis/shortScripts/phi_h/hapradResults/hapDefault/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin); // always pip
 }
 else
 {
-if(pipORpim == "pip") happathS = Form("/home/kjgroup/mysidis/shortScripts/phi_h/hapradResults/NickPipModel/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
-if(pipORpim == "pim") happathS = Form("/home/kjgroup/mysidis/shortScripts/phi_h/hapradResults/NickPimModel/pim_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
+if(pipORpim == "pip") happathS = Form("/home/harrison/mysidis/shortScripts/phi_h/hapradResults/NickPipModel/pip_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
+if(pipORpim == "pim") happathS = Form("/home/harrison/mysidis/shortScripts/phi_h/hapradResults/NickPimModel/pim_BiSc5_x%iQQ%iz%iPT2%i.dat", xBin, QQBin, zBin, PT2Bin);
 }
 ifstream hapfileS(happathS.c_str());
 
