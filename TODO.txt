@@ -1,16 +1,16 @@
 mysidis to do:
 
-convert MAcAccfiles/ txt files to root file - in progress - see shortScripts/phi_h/MAcAccfiles_txt2root.C
+--- convert MAcAccfiles/ txt files to root file
 
-delete shortScripts/phi_h/systematicErrors
+--- delete shortScripts/phi_h/systematicErrors
 
 update MAcAccVPT2_wSystematics.C:
 	- read new MAcAccfiles root file
-	- read systematic errors from correct root files
+	- read systematic errors from correct root files (not old txt files)
 
 update final tables
 
-update git documentation (README.md file)
+--- update git documentation (README.md file)
 
 (also kpp stuff)
 
