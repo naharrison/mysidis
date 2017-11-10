@@ -4,11 +4,13 @@ mysidis to do:
 
 --- delete shortScripts/phi_h/systematicErrors
 
-update MAcAccVPT2_wSystematics.C:
+--- update MAcAccVPT2_wSystematics.C:
 	- read new MAcAccfiles root file
 	- read systematic errors from correct root files (not old txt files)
 
 update final tables
+
+update analysis note plots
 
 --- update git documentation (README.md file)
 

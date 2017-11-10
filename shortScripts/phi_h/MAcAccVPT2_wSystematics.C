@@ -8,9 +8,10 @@ gStyle->SetOptStat(0);
 
 string YscaleOpt = "smart"; // "fixed" or "smart"
 
-bool Mlog = 1;
+bool Mlog = 0;
 
-int iMarkerStyle = 4;
+int iMarkerStyle_pip = 4;
+int iMarkerStyle_pim = 23;
 
 const int NPT2Bins = 20;
 float PT2Min = 0;
@@ -29,25 +30,33 @@ hpimM = new TH1F("hpimM", "hpimM", NPT2Bins, PT2Min, PT2Max);
 hpimAc = new TH1F("hpimAc", "hpimAc", NPT2Bins, PT2Min, PT2Max);
 hpimAcc = new TH1F("hpimAcc", "hpimAcc", NPT2Bins, PT2Min, PT2Max);
 
+TFile *MAcAccFile = new TFile("/home/naharrison/mysidis-histos/MAcAcc.root", "READ");
+TFile *sysFile = new TFile("/home/naharrison/mysidis-histos/Total_systematics.root", "READ");
+
 /// pip: ///
 for(int k = 0; k < NPT2Bins; k++)
 {
-ifstream pipMfile(Form("/scratch/MAcAccfiles/pip_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-ifstream pipAcAccfile(Form("/scratch/MAcAccfiles/pip_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-
 float pipM, pipMe, pipAc, pipAce, pipAcc, pipAcce;
+string MhistoName = Form("pip_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+string AcAcchistoName = Form("pip_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
 
-if(pipMfile)
+if(MAcAccFile->GetListOfKeys()->Contains(MhistoName.c_str()))
 {
-pipMfile>>pipM>>pipMe;
+TH1F *Mhisto = (TH1F*) MAcAccFile->Get(MhistoName.c_str());
+pipM = Mhisto->GetBinContent(1);
+pipMe = Mhisto->GetBinError(1);
 
 hpipM->SetBinContent(k+1, pipM);
 hpipM->SetBinError(k+1, pipMe);
 }
 
-if(pipAcAccfile)
+if(MAcAccFile->GetListOfKeys()->Contains(AcAcchistoName.c_str()))
 {
-pipAcAccfile>>pipAc>>pipAce>>pipAcc>>pipAcce;
+TH1F *AcAcchisto = (TH1F*) MAcAccFile->Get(AcAcchistoName.c_str());
+pipAc = AcAcchisto->GetBinContent(1);
+pipAce = AcAcchisto->GetBinError(1);
+pipAcc = AcAcchisto->GetBinContent(2);
+pipAcce = AcAcchisto->GetBinError(2);
 
 hpipAc->SetBinContent(k+1, pipAc);
 hpipAc->SetBinError(k+1, pipAce);
@@ -55,29 +64,32 @@ hpipAcc->SetBinContent(k+1, pipAcc);
 hpipAcc->SetBinError(k+1, pipAcce);
 }
 
-pipMfile.close();
-pipAcAccfile.close();
 }
 
 /// pim: ///
 for(int k = 0; k < NPT2Bins; k++)
 {
-ifstream pimMfile(Form("/scratch/MAcAccfiles/pim_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-ifstream pimAcAccfile(Form("/scratch/MAcAccfiles/pim_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-
 float pimM, pimMe, pimAc, pimAce, pimAcc, pimAcce;
+string MhistoName = Form("pim_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+string AcAcchistoName = Form("pim_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
 
-if(pimMfile)
+if(MAcAccFile->GetListOfKeys()->Contains(MhistoName.c_str()))
 {
-pimMfile>>pimM>>pimMe;
+TH1F *Mhisto = (TH1F*) MAcAccFile->Get(MhistoName.c_str());
+pimM = Mhisto->GetBinContent(1);
+pimMe = Mhisto->GetBinError(1);
 
 hpimM->SetBinContent(k+1, pimM);
 hpimM->SetBinError(k+1, pimMe);
 }
 
-if(pimAcAccfile)
+if(MAcAccFile->GetListOfKeys()->Contains(AcAcchistoName.c_str()))
 {
-pimAcAccfile>>pimAc>>pimAce>>pimAcc>>pimAcce;
+TH1F *AcAcchisto = (TH1F*) MAcAccFile->Get(AcAcchistoName.c_str());
+pimAc = AcAcchisto->GetBinContent(1);
+pimAce = AcAcchisto->GetBinError(1);
+pimAcc = AcAcchisto->GetBinContent(2);
+pimAcce = AcAcchisto->GetBinError(2);
 
 hpimAc->SetBinContent(k+1, pimAc);
 hpimAc->SetBinError(k+1, pimAce);
@@ -85,15 +97,13 @@ hpimAcc->SetBinContent(k+1, pimAcc);
 hpimAcc->SetBinError(k+1, pimAcce);
 }
 
-pimMfile.close();
-pimAcAccfile.close();
 }
 
 /// Draw: ///
 can->cd(1)->SetGrid();
 if(Mlog) can->cd(1)->SetLogy();
 hpipM->SetLineColor(kRed);
-hpipM->SetMarkerStyle(iMarkerStyle);
+hpipM->SetMarkerStyle(iMarkerStyle_pip);
 if(YscaleOpt == "smart" && Mlog) hpipM->GetYaxis()->SetRangeUser(1, 2.0*max(hpipM->GetMaximum(), hpimM->GetMaximum()));
 if(YscaleOpt == "smart" && !Mlog) hpipM->GetYaxis()->SetRangeUser(-0.2*max(hpipM->GetMaximum(), hpimM->GetMaximum()), 1.1*max(hpipM->GetMaximum(), hpimM->GetMaximum()));
 if(YscaleOpt == "fixed") hpipM->GetYaxis()->SetRangeUser(-2000, 12500);
@@ -101,31 +111,31 @@ hpipM->SetTitle(Form("Multiplicity for #pi+ (red) and #pi- (blue), x%i QQ%i z%i"
 hpipM->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
 hpipM->Draw("same E1");
 hpimM->SetLineColor(kBlue);
-hpimM->SetMarkerStyle(iMarkerStyle);
+hpimM->SetMarkerStyle(iMarkerStyle_pim);
 hpimM->Draw("same E1");
 
 can->cd(2)->SetGrid();
 hpipAc->SetLineColor(kRed);
-hpipAc->SetMarkerStyle(iMarkerStyle);
+hpipAc->SetMarkerStyle(iMarkerStyle_pip);
 if(YscaleOpt == "smart") hpipAc->GetYaxis()->SetRangeUser(min(hpipAc->GetMinimum(), hpimAc->GetMinimum()) - 0.20, max(hpipAc->GetMaximum(), hpimAc->GetMaximum()) + 0.1);
 if(YscaleOpt == "fixed") hpipAc->GetYaxis()->SetRangeUser(-0.42, 0.3);
 hpipAc->SetTitle(Form("A^{cos#phi}_{UU} for #pi+ (red) and #pi- (blue), x%i QQ%i z%i", xBin, QQBin, zBin));
 hpipAc->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
 hpipAc->Draw("same E1");
 hpimAc->SetLineColor(kBlue);
-hpimAc->SetMarkerStyle(iMarkerStyle);
+hpimAc->SetMarkerStyle(iMarkerStyle_pim);
 hpimAc->Draw("same E1");
 
 can->cd(3)->SetGrid();
 hpipAcc->SetLineColor(kRed);
-hpipAcc->SetMarkerStyle(iMarkerStyle);
+hpipAcc->SetMarkerStyle(iMarkerStyle_pip);
 if(YscaleOpt == "smart") hpipAcc->GetYaxis()->SetRangeUser(min(hpipAcc->GetMinimum(), hpimAcc->GetMinimum()) - 0.20, max(hpipAcc->GetMaximum(), hpimAcc->GetMaximum()) + 0.1);
 if(YscaleOpt == "fixed") hpipAcc->GetYaxis()->SetRangeUser(-0.4, 0.42);
 hpipAcc->SetTitle(Form("A^{cos2#phi}_{UU} for #pi+ (red) and #pi- (blue), x%i QQ%i z%i", xBin, QQBin, zBin));
 hpipAcc->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
 hpipAcc->Draw("same E1");
 hpimAcc->SetLineColor(kBlue);
-hpimAcc->SetMarkerStyle(iMarkerStyle);
+hpimAcc->SetMarkerStyle(iMarkerStyle_pim);
 hpimAcc->Draw("same E1");
 
 ///////////////////////////// systematics: //////////////////////
@@ -149,50 +159,59 @@ float AccsysYval = gPad->GetUymin() + 0.15*(gPad->GetUymax() - gPad->GetUymin())
 
 for(int k = 0; k < NPT2Bins; k++)
 {
-float Msys;
+float Msys, Acsys, Accsys;
 
-ifstream file1(Form("systematicErrors/pip_M_sys_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-if(file1)
+// pip:
+string pipSysHistName = Form("hMAcAccSys_pip_%i_%i_%i_%i", xBin, QQBin, zBin, k);
+string pipMhistoName = Form("pip_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+string pipAcAcchistoName = Form("pip_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+
+if(sysFile->GetListOfKeys()->Contains(pipSysHistName.c_str()))
 {
-file1>>Msys;
+TH1F *pipSysHist = (TH1F*) sysFile->Get(pipSysHistName.c_str());
+
+if(MAcAccFile->GetListOfKeys()->Contains(pipMhistoName.c_str()))
+{
+Msys = pipSysHist->GetBinContent(1);
 grpipSys_M->SetPoint(grpipSys_M->GetN(), hpipM->GetBinCenter(k+1), MsysYval);
 grpipSys_M->SetPointError(grpipSys_M->GetN()-1, 0, 0.5*Msys); // factor of 0.5 since error bar goes up and down... want the full height to = Msys
 }
-file1.close();
-
-ifstream file2(Form("systematicErrors/pim_M_sys_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-if(file2)
+if(MAcAccFile->GetListOfKeys()->Contains(pipAcAcchistoName.c_str()))
 {
-file2>>Msys;
-grpimSys_M->SetPoint(grpimSys_M->GetN(), hpimM->GetBinCenter(k+1), MsysYval);
-grpimSys_M->SetPointError(grpimSys_M->GetN()-1, 0, 0.5*Msys);
-}
-file2.close();
-
-
-float Acsys, Accsys;
-
-ifstream file3(Form("systematicErrors/pip_AcAcc_sys_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-if(file3)
-{
-file3>>Acsys>>Accsys;
+Acsys = pipSysHist->GetBinContent(2);
+Accsys = pipSysHist->GetBinContent(3);
 grpipSys_Ac->SetPoint(grpipSys_Ac->GetN(), hpipAc->GetBinCenter(k+1), AcsysYval);
 grpipSys_Ac->SetPointError(grpipSys_Ac->GetN()-1, 0, 0.5*Acsys);
 grpipSys_Acc->SetPoint(grpipSys_Acc->GetN(), hpipAcc->GetBinCenter(k+1), AccsysYval);
 grpipSys_Acc->SetPointError(grpipSys_Acc->GetN()-1, 0, 0.5*Accsys);
 }
-file3.close();
+}
 
-ifstream file4(Form("systematicErrors/pim_AcAcc_sys_BiSc5_x%iQQ%iz%iPT2%i.txt", xBin, QQBin, zBin, k));
-if(file4)
+// pim:
+string pimSysHistName = Form("hMAcAccSys_pim_%i_%i_%i_%i", xBin, QQBin, zBin, k);
+string pimMhistoName = Form("pim_M_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+string pimAcAcchistoName = Form("pim_AcAcc_it2_hap2_BiSc5_x%iQQ%iz%iPT2%i", xBin, QQBin, zBin, k);
+
+if(sysFile->GetListOfKeys()->Contains(pimSysHistName.c_str()))
 {
-file4>>Acsys>>Accsys;
+TH1F *pimSysHist = (TH1F*) sysFile->Get(pimSysHistName.c_str());
+
+if(MAcAccFile->GetListOfKeys()->Contains(pimMhistoName.c_str()))
+{
+Msys = pimSysHist->GetBinContent(1);
+grpimSys_M->SetPoint(grpimSys_M->GetN(), hpimM->GetBinCenter(k+1), MsysYval);
+grpimSys_M->SetPointError(grpimSys_M->GetN()-1, 0, 0.5*Msys); // factor of 0.5 since error bar goes up and down... want the full height to = Msys
+}
+if(MAcAccFile->GetListOfKeys()->Contains(pimAcAcchistoName.c_str()))
+{
+Acsys = pimSysHist->GetBinContent(2);
+Accsys = pimSysHist->GetBinContent(3);
 grpimSys_Ac->SetPoint(grpimSys_Ac->GetN(), hpimAc->GetBinCenter(k+1), AcsysYval);
 grpimSys_Ac->SetPointError(grpimSys_Ac->GetN()-1, 0, 0.5*Acsys);
 grpimSys_Acc->SetPoint(grpimSys_Acc->GetN(), hpimAcc->GetBinCenter(k+1), AccsysYval);
 grpimSys_Acc->SetPointError(grpimSys_Acc->GetN()-1, 0, 0.5*Accsys);
 }
-file4.close();
+}
 
 }
 
