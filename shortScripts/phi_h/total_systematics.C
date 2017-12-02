@@ -4,10 +4,10 @@ void total_systematics(int xBin = 0, int QQBin = 0, int zBin = 3, int PT2Bin = 5
 {
 gStyle->SetOptStat(0);
 
-bool doSaveRoot = 1;
+bool doSaveRoot = 0;
 
-TFile *sys13 = new TFile("Systematics_v2.root"); // systematics from first 13 sources
-TFile *sysSector = new TFile("Sector_systematics.root"); // systematics from sector dependence
+TFile *sys13 = new TFile("/home/naharrison/mysidis-histos/Systematics_v2.root"); // systematics from first 13 sources
+TFile *sysSector = new TFile("/home/naharrison/mysidis-histos/Sector_systematics.root"); // systematics from sector dependence
 
 TH1F *h13M = (TH1F*) sys13->Get(Form("hM_sysEcontributions_%s_%i_%i_%i_%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin));
 TH1F *h13Ac = (TH1F*) sys13->Get(Form("hAc_sysEcontributions_%s_%i_%i_%i_%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin));
@@ -67,8 +67,11 @@ else Accdelta_sys = 0.0;
 
 // ### create new histos w/ systematics w/ 14 instead of 13 bins ###
 TH1F *h14M = new TH1F("hSysM", "A_{0} Systematic Errors", 14, 0, 14);
+h14M->GetXaxis()->SetTitle("source");
 TH1F *h14Ac = new TH1F("hSysAc", "A_{c} Systematic Errors", 14, 0, 14);
+h14Ac->GetXaxis()->SetTitle("source");
 TH1F *h14Acc = new TH1F("hSysAcc", "A_{cc} Systematic Errors", 14, 0, 14);
+h14Acc->GetXaxis()->SetTitle("source");
 for(int b = 1; b <= 13; b++) {
 	h14M->SetBinContent(b, h13M->GetBinContent(b));
 	h14Ac->SetBinContent(b, h13Ac->GetBinContent(b));
@@ -124,5 +127,13 @@ if(doSaveRoot)
 	rootFile->Write();
 }
 
+TCanvas *hcan = new TCanvas("hcan", "hcan", 50, 50, 1200, 400);
+hcan->Divide(3, 1, 0.0001, 0.0001);
+hcan->cd(1);
+h14M->Draw();
+hcan->cd(2);
+h14Ac->Draw();
+hcan->cd(3);
+h14Acc->Draw();
 
 }
