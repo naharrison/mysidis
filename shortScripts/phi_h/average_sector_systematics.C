@@ -1,6 +1,18 @@
+#include <algorithm> // for std::find
+
+void average_sector_systematics(string pipORpim = "pim")
 {
 gStyle->SetOptStat(0);
 TFile *sysSector = new TFile("/home/naharrison/mysidis-histos/Sector_systematics.root");
+
+ifstream goodBinFile("finalKeptBins.txt");
+vector<string> goodBins;
+for(int k = 0; k < 3618; k++) {
+	string bin;
+	goodBinFile>>bin;
+	goodBins.push_back(bin);
+}
+goodBinFile.close();
 
 int nMBins = 0;
 float MSysSum = 0.0;
@@ -9,7 +21,6 @@ float AcSysSum = 0.0;
 int nAccBins = 0;
 float AccSysSum = 0.0;
 
-string pipORpim = "pim";
 cout<<endl<<pipORpim<<endl<<endl;
 
 for(int xBin = 0; xBin < 5; xBin++) {
@@ -67,16 +78,18 @@ if(!(xBin == 4 && QQBin == 1)) {
 	else Accdelta_sys = 0.0;
 	
 	// Get average sector systematic error
-	// If stat error = 0 the bin is empty. Not counting these.
-	if(Mdelta_stat > 0.0) {
+	// Only use good bins in calculation
+	string MBinName = Form("%s_M_%i_%i_%i_%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin);
+	string AcAccBinName = Form("%s_AcAcc_%i_%i_%i_%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin);
+
+	if(std::find(goodBins.begin(), goodBins.end(), MBinName) != goodBins.end()) {
 		nMBins++;
 		MSysSum = MSysSum + Mdelta_sys;
 	}
-	if(Acdelta_stat > 0.0) {
+
+	if(std::find(goodBins.begin(), goodBins.end(), AcAccBinName) != goodBins.end()) {
 		nAcBins++;
 		AcSysSum = AcSysSum + Acdelta_sys;
-	}
-	if(Accdelta_stat > 0.0) {
 		nAccBins++;
 		AccSysSum = AccSysSum + Accdelta_sys;
 	}
