@@ -9,7 +9,8 @@ float AcSysSum = 0.0;
 int nAccBins = 0;
 float AccSysSum = 0.0;
 
-string pipORpim = "pip";
+string pipORpim = "pim";
+cout<<endl<<pipORpim<<endl<<endl;
 
 for(int xBin = 0; xBin < 5; xBin++) {
 for(int QQBin = 0; QQBin < 2; QQBin++) {
@@ -80,7 +81,13 @@ if(!(xBin == 4 && QQBin == 1)) {
 		AccSysSum = AccSysSum + Accdelta_sys;
 	}
 
-	if(zBin == 0 && PT2Bin == 0) cout<<xBin<<" "<<QQBin<<endl;
+	if(xBin == 1 && QQBin == 1 && zBin == 8) {
+		cout<<xBin<<" "<<QQBin<<" "<<zBin<<" "<<PT2Bin<<endl;
+		cout<<MDelta<<" "<<Mdelta_stat<<" "<<Mdelta_sys<<endl;
+		cout<<AcDelta<<" "<<Acdelta_stat<<" "<<Acdelta_sys<<endl;
+		cout<<AccDelta<<" "<<Accdelta_stat<<" "<<Accdelta_sys<<endl;
+		cout<<endl;
+	}
 
 }}}}}
 
