@@ -21,3 +21,4 @@ The aforementioned histos/ directory is too large to keep in this repo. The "off
  The files originally located in /scratch/MAcAccfiles/ on my old HP desktop are now kept in the aforementioned official mysidis-histos/ directory in a root file (MAcAcc.root).
 The original MAcAccfiles/ txt files are still kept as a back up in my farm home directory (MAcAccfiles.tar.gz).
 The systematic uncertainties are also kept in a root file in mysidis-histos/.
+The files originally located in /scratch/dflt_term0_fromHAPRAD/ are now located in this repo in the scratch/ directory.
