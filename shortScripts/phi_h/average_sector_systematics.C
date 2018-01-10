@@ -14,12 +14,12 @@ for(int k = 0; k < 3618; k++) {
 }
 goodBinFile.close();
 
-int nMBins = 0;
-float MSysSum = 0.0;
-int nAcBins = 0;
-float AcSysSum = 0.0;
-int nAccBins = 0;
-float AccSysSum = 0.0;
+vector<float> MSys;
+vector<float> AcSys;
+vector<float> AccSys;
+TH1F *hMSys = new TH1F("hMSys", "hMSys", 50, 0, 8000);
+TH1F *hAcSys = new TH1F("hAcSys", "hAcSys", 50, 0, 0.2);
+TH1F *hAccSys = new TH1F("hAccSys", "hAccSys", 50, 0, 0.2);
 
 cout<<endl<<pipORpim<<endl<<endl;
 
@@ -83,30 +83,63 @@ if(!(xBin == 4 && QQBin == 1)) {
 	string AcAccBinName = Form("%s_AcAcc_%i_%i_%i_%i", pipORpim.c_str(), xBin, QQBin, zBin, PT2Bin);
 
 	if(std::find(goodBins.begin(), goodBins.end(), MBinName) != goodBins.end()) {
-		nMBins++;
-		MSysSum = MSysSum + Mdelta_sys;
+		MSys.push_back(Mdelta_sys);
+		hMSys->Fill(Mdelta_sys);
 	}
 
 	if(std::find(goodBins.begin(), goodBins.end(), AcAccBinName) != goodBins.end()) {
-		nAcBins++;
-		AcSysSum = AcSysSum + Acdelta_sys;
-		nAccBins++;
-		AccSysSum = AccSysSum + Accdelta_sys;
-	}
-
-	if(xBin == 1 && QQBin == 1 && zBin == 8) {
-		cout<<xBin<<" "<<QQBin<<" "<<zBin<<" "<<PT2Bin<<endl;
-		cout<<MDelta<<" "<<Mdelta_stat<<" "<<Mdelta_sys<<endl;
-		cout<<AcDelta<<" "<<Acdelta_stat<<" "<<Acdelta_sys<<endl;
-		cout<<AccDelta<<" "<<Accdelta_stat<<" "<<Accdelta_sys<<endl;
-		cout<<endl;
+		AcSys.push_back(Acdelta_sys);
+		AccSys.push_back(Accdelta_sys);
+		hAcSys->Fill(Acdelta_sys);
+		hAccSys->Fill(Accdelta_sys);
 	}
 
 }}}}}
 
-cout<<endl;
-cout<<MSysSum<<"/"<<nMBins<<endl;
-cout<<AcSysSum<<"/"<<nAcBins<<endl;
-cout<<AccSysSum<<"/"<<nAccBins<<endl;
+// calculate average
+float MSysSum = 0.0;
+for(int k = 0; k < MSys.size(); k++) {
+	MSysSum += MSys[k];
+}
+float MSysAve = MSysSum/MSys.size();
+
+float AcSysSum = 0.0;
+float AccSysSum = 0.0;
+for(int k = 0; k < AcSys.size(); k++) {
+	AcSysSum += AcSys[k];
+	AccSysSum += AccSys[k];
+}
+float AcSysAve = AcSysSum/AcSys.size();
+float AccSysAve = AccSysSum/AccSys.size();
+
+// calculate stdev
+float MDeviationSum = 0.0;
+for(int k = 0; k < MSys.size(); k++) {
+	MDeviationSum += pow(MSys[k] - MSysAve, 2);
+}
+float MStdev = sqrt((1.0/((float) MSys.size()))*MDeviationSum);
+
+float AcDeviationSum = 0.0;
+float AccDeviationSum = 0.0;
+for(int k = 0; k < AcSys.size(); k++) {
+	AcDeviationSum += pow(AcSys[k] - AcSysAve, 2);
+	AccDeviationSum += pow(AccSys[k] - AccSysAve, 2);
+}
+float AcStdev = sqrt((1.0/((float) AcSys.size()))*AcDeviationSum);
+float AccStdev = sqrt((1.0/((float) AccSys.size()))*AccDeviationSum);
+
+
+// print & draw
+cout<<MSysAve<<" "<<MStdev<<endl;
+cout<<AcSysAve<<" "<<AcStdev<<endl;
+cout<<AccSysAve<<" "<<AccStdev<<endl;
+TCanvas *can = new TCanvas();
+can->Divide(3, 1);
+can->cd(1);
+hMSys->Draw();
+can->cd(2);
+hAcSys->Draw();
+can->cd(3);
+hAccSys->Draw();
 
 }
