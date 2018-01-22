@@ -55,15 +55,17 @@ Accdelta_stat = sqrt(Accdelta_stat)/sqrt(6.0);
 
 float Mdelta_sys, Acdelta_sys, Accdelta_sys;
 if(MDelta > Mdelta_stat) Mdelta_sys = sqrt(MDelta*MDelta - Mdelta_stat*Mdelta_stat);
+else if(pipORpim == "pip") Mdelta_sys = 115.0; // use average of all bins instead of 0
+else if(pipORpim == "pim") Mdelta_sys = 140.0; // use average of all bins instead of 0
 else Mdelta_sys = 0.0;
 if(AcDelta > Acdelta_stat) Acdelta_sys = sqrt(AcDelta*AcDelta - Acdelta_stat*Acdelta_stat);
+else if(pipORpim == "pip") Acdelta_sys = 0.037; // use average of all bins instead of 0
+else if(pipORpim == "pim") Acdelta_sys = 0.037; // use average of all bins instead of 0
 else Acdelta_sys = 0.0;
 if(AccDelta > Accdelta_stat) Accdelta_sys = sqrt(AccDelta*AccDelta - Accdelta_stat*Accdelta_stat);
+else if(pipORpim == "pip") Accdelta_sys = 0.028; // use average of all bins instead of 0
+else if(pipORpim == "pim") Accdelta_sys = 0.030; // use average of all bins instead of 0
 else Accdelta_sys = 0.0;
-
-//cout<<MDelta<<" "<<Mdelta_stat<<endl;
-//cout<<AcDelta<<" "<<Acdelta_stat<<endl;
-//cout<<AccDelta<<" "<<Accdelta_stat<<endl;
 
 // ### create new histos w/ systematics w/ 14 instead of 13 bins ###
 TH1F *h14M = new TH1F("hSysM", "A_{0} Systematic Errors", 14, 0, 14);
