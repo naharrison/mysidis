@@ -1,3 +1,6 @@
 shortScripts/phi_h/Sector_systematics.root
 shortScripts/phi_h/Systematics_v2.root
 shortScripts/phi_h/Total_systematics.root
+mysidis_C.d
+mysidis_C.so
+mysidis_C_ACLiC_dict_rdict.pcm

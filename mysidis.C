@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include "TStopwatch.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
@@ -14,15 +13,13 @@
 #include "programFiles/eID.C"
 #include "programFiles/hadronID.C"
 #include "programFiles/getGenIndices.C"
-#include "MomCorr.C"
 
-void mysidis(int accIterationN = 0, int filestart = 1, int Nfiles = 5, int ExpOrSim = 1, bool do_momCorr_e = 1, bool do_momCorr_pions = 1, int e_zvertex_strict = 0, int e_ECsampling_strict = 0, int e_ECoutVin_strict = 0, int e_ECgeometric_strict = 0, int e_CCthetaMatching_strict = 0, int e_R1fid_strict = 0, int e_R3fid_strict = 0, int e_CCphiMatching_strict = 0, int e_CCfiducial_strict = 0, int yCut_strict = 0, int pip_vvp_strict = 0, int pip_R1fid_strict = 0, int pip_MXcut_strict = 0, int pim_vvp_strict = 0, int pim_R1fid_strict = 0, int pim_MXcut_strict = 0) // ExpOrSim = 0(MC) or 1(data) // note: momCorr is only done to data (even if it's turned on for MC)
+void mysidis(int e_zvertex_strict = 0, int e_ECsampling_strict = 0, int e_ECoutVin_strict = 0, int e_ECgeometric_strict = 0, int e_CCthetaMatching_strict = 0, int e_R1fid_strict = 0, int e_R3fid_strict = 0, int e_CCphiMatching_strict = 0, int e_CCfiducial_strict = 0, int yCut_strict = 0, int pip_vvp_strict = 0, int pip_R1fid_strict = 0, int pip_MXcut_strict = 0, int pim_vvp_strict = 0, int pim_R1fid_strict = 0, int pim_MXcut_strict = 0)
 {
-TStopwatch *stopwat = new TStopwatch();
-
 int MCversion = 12;
-
-MomCorr_e1f *MomCorr = new MomCorr_e1f();
+int filestart = 1;
+int Nfiles = 5;
+int ExpOrSim = 0; // 0(MC) or 1(data)
 
 // %%%%% some cut values %%%%%
 float WMin = 2.05;
@@ -30,177 +27,8 @@ float yMax = 0.85; // default value (for when yCut_strict = 0)
 if(yCut_strict == 1) yMax = 0.8;
 // %%%%% end some cut values %%%%%
 
-// %%%%% x, QQ, z, PT2 bin definitions %%%%%
-int binSchemeOpt = 5; // when you change this, there are two spots below that you have to update
-
-int NxBins, NQQBins, NzBins_pip, NPT2Bins_pip, NzBins_pim, NPT2Bins_pim;
-int NphihBins;
-float phihMin, phihMax;
-
-if(binSchemeOpt == 5)
-{
-NxBins = 5;
-NQQBins = 2;
-NzBins_pip = 18;
-NPT2Bins_pip = 20;
-NzBins_pim = 18;
-NPT2Bins_pim = 20;
-NphihBins = 36;
-phihMin = -180;
-phihMax = 180;
-}
-if(binSchemeOpt == 6) // consistent with Osipenko's binning
-{
-NxBins = 19;
-NQQBins = 10;
-NzBins_pip = 22;
-NPT2Bins_pip = 10;
-NzBins_pim = 1;
-NPT2Bins_pim = 1;
-NphihBins = 18;
-phihMin = -180; // exception here, Osipenko uses 0-360, but -180-180 is better so I'll convert his results to this convention
-phihMax = 180;
-}
-if(binSchemeOpt == 7) // used for quick resolution study
-{
-NxBins = 5;
-NQQBins = 2;
-NzBins_pip = 9;
-NPT2Bins_pip = 10;
-NzBins_pim = 9;
-NPT2Bins_pim = 10;
-NphihBins = 12;
-phihMin = -180;
-phihMax = 180;
-}
-if(binSchemeOpt == 8) // like scheme 5 but each x,QQ,z,PT2 bin split into 2*2*2*2 (still 36 phih bins)
-{
-NxBins = 5*2;
-NQQBins = 2*2;
-NzBins_pip = 18*2;
-NPT2Bins_pip = 20*2;
-NzBins_pim = 18*2;
-NPT2Bins_pim = 20*2;
-NphihBins = 36;
-phihMin = -180;
-phihMax = 180;
-}
-if(binSchemeOpt == 9) // used for another quick resolution study
-{
-NxBins = 5;
-NQQBins = 2;
-NzBins_pip = 4;
-NPT2Bins_pip = 4;
-NzBins_pim = 4;
-NPT2Bins_pim = 4;
-NphihBins = 5;
-phihMin = -180;
-phihMax = 180;
-}
-
-float xLimits[NxBins + 1], QQLimits[NxBins][NQQBins + 1], zLimits_pip[NzBins_pip + 1], PT2Limits_pip[NPT2Bins_pip + 1], zLimits_pim[NzBins_pim + 1], PT2Limits_pim[NPT2Bins_pim + 1];
-
-if(binSchemeOpt == 5)
-{
-xLimits[0] = 0.1; xLimits[1] = 0.2; xLimits[2] = 0.3; xLimits[3] = 0.4; xLimits[4] = 0.5; xLimits[5] = 0.6;
-QQLimits[0][0] = 1.0; QQLimits[0][1] = 1.3; QQLimits[0][2] = 5.0; QQLimits[1][0] = 1.0; QQLimits[1][1] = 1.7; QQLimits[1][2] = 5.0; QQLimits[2][0] = 1.0; QQLimits[2][1] = 2.2; QQLimits[2][2] = 5.0; QQLimits[3][0] = 1.0; QQLimits[3][1] = 2.9; QQLimits[3][2] = 5.0; QQLimits[4][0] = 1.0; QQLimits[4][1] = 5.0; QQLimits[4][2] = 99.9;
-zLimits_pip[0] = 0.0; zLimits_pip[1] = 0.05; zLimits_pip[2] = 0.10; zLimits_pip[3] = 0.15; zLimits_pip[4] = 0.20; zLimits_pip[5] = 0.25; zLimits_pip[6] = 0.30; zLimits_pip[7] = 0.35; zLimits_pip[8] = 0.40; zLimits_pip[9] = 0.45; zLimits_pip[10] = 0.50; zLimits_pip[11] = 0.55; zLimits_pip[12] = 0.60; zLimits_pip[13] = 0.65; zLimits_pip[14] = 0.70; zLimits_pip[15] = 0.75; zLimits_pip[16] = 0.80; zLimits_pip[17] = 0.85; zLimits_pip[18] = 0.90;
-PT2Limits_pip[0] = 0.0; PT2Limits_pip[1] = 0.05; PT2Limits_pip[2] = 0.10; PT2Limits_pip[3] = 0.15; PT2Limits_pip[4] = 0.20; PT2Limits_pip[5] = 0.25; PT2Limits_pip[6] = 0.30; PT2Limits_pip[7] = 0.35; PT2Limits_pip[8] = 0.40; PT2Limits_pip[9] = 0.45; PT2Limits_pip[10] = 0.50; PT2Limits_pip[11] = 0.55; PT2Limits_pip[12] = 0.60; PT2Limits_pip[13] = 0.65; PT2Limits_pip[14] = 0.70; PT2Limits_pip[15] = 0.75; PT2Limits_pip[16] = 0.80; PT2Limits_pip[17] = 0.85; PT2Limits_pip[18] = 0.90; PT2Limits_pip[19] = 0.95; PT2Limits_pip[20] = 1.00;
-zLimits_pim[0] = 0.0; zLimits_pim[1] = 0.05; zLimits_pim[2] = 0.10; zLimits_pim[3] = 0.15; zLimits_pim[4] = 0.20; zLimits_pim[5] = 0.25; zLimits_pim[6] = 0.30; zLimits_pim[7] = 0.35; zLimits_pim[8] = 0.40; zLimits_pim[9] = 0.45; zLimits_pim[10] = 0.50; zLimits_pim[11] = 0.55; zLimits_pim[12] = 0.60; zLimits_pim[13] = 0.65; zLimits_pim[14] = 0.70; zLimits_pim[15] = 0.75; zLimits_pim[16] = 0.80; zLimits_pim[17] = 0.85; zLimits_pim[18] = 0.90;
-PT2Limits_pim[0] = 0.0; PT2Limits_pim[1] = 0.05; PT2Limits_pim[2] = 0.10; PT2Limits_pim[3] = 0.15; PT2Limits_pim[4] = 0.20; PT2Limits_pim[5] = 0.25; PT2Limits_pim[6] = 0.30; PT2Limits_pim[7] = 0.35; PT2Limits_pim[8] = 0.40; PT2Limits_pim[9] = 0.45; PT2Limits_pim[10] = 0.50; PT2Limits_pim[11] = 0.55; PT2Limits_pim[12] = 0.60; PT2Limits_pim[13] = 0.65; PT2Limits_pim[14] = 0.70; PT2Limits_pim[15] = 0.75; PT2Limits_pim[16] = 0.80; PT2Limits_pim[17] = 0.85; PT2Limits_pim[18] = 0.90; PT2Limits_pim[19] = 0.95; PT2Limits_pim[20] = 1.00;
-}
-if(binSchemeOpt == 6)
-{
-xLimits[0] = 0.128; xLimits[1] = 0.161; xLimits[2] = 0.1905; xLimits[3] = 0.221; xLimits[4] = 0.2525; xLimits[5] = 0.2855; xLimits[6] = 0.32; xLimits[7] = 0.356; xLimits[8] = 0.394; xLimits[9] = 0.4335; xLimits[10] = 0.4745; xLimits[11] = 0.5175; xLimits[12] = 0.5625; xLimits[13] = 0.6095; xLimits[14] = 0.6585; xLimits[15] = 0.7095; xLimits[16] = 0.763; xLimits[17] = 0.8185; xLimits[18] = 0.8765; xLimits[19] = 0.9425;
-
-QQLimits[0][0] = 1.38; QQLimits[0][1] = 1.62; QQLimits[0][2] = 1.88; QQLimits[0][3] = 2.19; QQLimits[0][4] = 2.65; QQLimits[0][5] = 3.18; QQLimits[0][6] = 3.76; QQLimits[0][7] = 4.47; QQLimits[0][8] = 5.28; QQLimits[0][9] = 6.165; QQLimits[0][10] = 7.05;
-
-QQLimits[1][0] = 1.38; QQLimits[1][1] = 1.62; QQLimits[1][2] = 1.88; QQLimits[1][3] = 2.19; QQLimits[1][4] = 2.65; QQLimits[1][5] = 3.18; QQLimits[1][6] = 3.76; QQLimits[1][7] = 4.47; QQLimits[1][8] = 5.28; QQLimits[1][9] = 6.165; QQLimits[1][10] = 7.05;
-
-QQLimits[2][0] = 1.38; QQLimits[2][1] = 1.62; QQLimits[2][2] = 1.88; QQLimits[2][3] = 2.19; QQLimits[2][4] = 2.65; QQLimits[2][5] = 3.18; QQLimits[2][6] = 3.76; QQLimits[2][7] = 4.47; QQLimits[2][8] = 5.28; QQLimits[2][9] = 6.165; QQLimits[2][10] = 7.05;
-
-QQLimits[3][0] = 1.38; QQLimits[3][1] = 1.62; QQLimits[3][2] = 1.88; QQLimits[3][3] = 2.19; QQLimits[3][4] = 2.65; QQLimits[3][5] = 3.18; QQLimits[3][6] = 3.76; QQLimits[3][7] = 4.47; QQLimits[3][8] = 5.28; QQLimits[3][9] = 6.165; QQLimits[3][10] = 7.05;
-
-QQLimits[4][0] = 1.38; QQLimits[4][1] = 1.62; QQLimits[4][2] = 1.88; QQLimits[4][3] = 2.19; QQLimits[4][4] = 2.65; QQLimits[4][5] = 3.18; QQLimits[4][6] = 3.76; QQLimits[4][7] = 4.47; QQLimits[4][8] = 5.28; QQLimits[4][9] = 6.165; QQLimits[4][10] = 7.05;
-
-QQLimits[5][0] = 1.38; QQLimits[5][1] = 1.62; QQLimits[5][2] = 1.88; QQLimits[5][3] = 2.19; QQLimits[5][4] = 2.65; QQLimits[5][5] = 3.18; QQLimits[5][6] = 3.76; QQLimits[5][7] = 4.47; QQLimits[5][8] = 5.28; QQLimits[5][9] = 6.165; QQLimits[5][10] = 7.05;
-
-QQLimits[6][0] = 1.38; QQLimits[6][1] = 1.62; QQLimits[6][2] = 1.88; QQLimits[6][3] = 2.19; QQLimits[6][4] = 2.65; QQLimits[6][5] = 3.18; QQLimits[6][6] = 3.76; QQLimits[6][7] = 4.47; QQLimits[6][8] = 5.28; QQLimits[6][9] = 6.165; QQLimits[6][10] = 7.05;
-
-QQLimits[7][0] = 1.38; QQLimits[7][1] = 1.62; QQLimits[7][2] = 1.88; QQLimits[7][3] = 2.19; QQLimits[7][4] = 2.65; QQLimits[7][5] = 3.18; QQLimits[7][6] = 3.76; QQLimits[7][7] = 4.47; QQLimits[7][8] = 5.28; QQLimits[7][9] = 6.165; QQLimits[7][10] = 7.05;
-
-QQLimits[8][0] = 1.38; QQLimits[8][1] = 1.62; QQLimits[8][2] = 1.88; QQLimits[8][3] = 2.19; QQLimits[8][4] = 2.65; QQLimits[8][5] = 3.18; QQLimits[8][6] = 3.76; QQLimits[8][7] = 4.47; QQLimits[8][8] = 5.28; QQLimits[8][9] = 6.165; QQLimits[8][10] = 7.05;
-
-QQLimits[9][0] = 1.38; QQLimits[9][1] = 1.62; QQLimits[9][2] = 1.88; QQLimits[9][3] = 2.19; QQLimits[9][4] = 2.65; QQLimits[9][5] = 3.18; QQLimits[9][6] = 3.76; QQLimits[9][7] = 4.47; QQLimits[9][8] = 5.28; QQLimits[9][9] = 6.165; QQLimits[9][10] = 7.05;
-
-QQLimits[10][0] = 1.38; QQLimits[10][1] = 1.62; QQLimits[10][2] = 1.88; QQLimits[10][3] = 2.19; QQLimits[10][4] = 2.65; QQLimits[10][5] = 3.18; QQLimits[10][6] = 3.76; QQLimits[10][7] = 4.47; QQLimits[10][8] = 5.28; QQLimits[10][9] = 6.165; QQLimits[10][10] = 7.05;
-
-QQLimits[11][0] = 1.38; QQLimits[11][1] = 1.62; QQLimits[11][2] = 1.88; QQLimits[11][3] = 2.19; QQLimits[11][4] = 2.65; QQLimits[11][5] = 3.18; QQLimits[11][6] = 3.76; QQLimits[11][7] = 4.47; QQLimits[11][8] = 5.28; QQLimits[11][9] = 6.165; QQLimits[11][10] = 7.05;
-
-QQLimits[12][0] = 1.38; QQLimits[12][1] = 1.62; QQLimits[12][2] = 1.88; QQLimits[12][3] = 2.19; QQLimits[12][4] = 2.65; QQLimits[12][5] = 3.18; QQLimits[12][6] = 3.76; QQLimits[12][7] = 4.47; QQLimits[12][8] = 5.28; QQLimits[12][9] = 6.165; QQLimits[12][10] = 7.05;
-
-QQLimits[13][0] = 1.38; QQLimits[13][1] = 1.62; QQLimits[13][2] = 1.88; QQLimits[13][3] = 2.19; QQLimits[13][4] = 2.65; QQLimits[13][5] = 3.18; QQLimits[13][6] = 3.76; QQLimits[13][7] = 4.47; QQLimits[13][8] = 5.28; QQLimits[13][9] = 6.165; QQLimits[13][10] = 7.05;
-
-QQLimits[14][0] = 1.38; QQLimits[14][1] = 1.62; QQLimits[14][2] = 1.88; QQLimits[14][3] = 2.19; QQLimits[14][4] = 2.65; QQLimits[14][5] = 3.18; QQLimits[14][6] = 3.76; QQLimits[14][7] = 4.47; QQLimits[14][8] = 5.28; QQLimits[14][9] = 6.165; QQLimits[14][10] = 7.05;
-
-QQLimits[15][0] = 1.38; QQLimits[15][1] = 1.62; QQLimits[15][2] = 1.88; QQLimits[15][3] = 2.19; QQLimits[15][4] = 2.65; QQLimits[15][5] = 3.18; QQLimits[15][6] = 3.76; QQLimits[15][7] = 4.47; QQLimits[15][8] = 5.28; QQLimits[15][9] = 6.165; QQLimits[15][10] = 7.05;
-
-QQLimits[16][0] = 1.38; QQLimits[16][1] = 1.62; QQLimits[16][2] = 1.88; QQLimits[16][3] = 2.19; QQLimits[16][4] = 2.65; QQLimits[16][5] = 3.18; QQLimits[16][6] = 3.76; QQLimits[16][7] = 4.47; QQLimits[16][8] = 5.28; QQLimits[16][9] = 6.165; QQLimits[16][10] = 7.05;
-
-QQLimits[17][0] = 1.38; QQLimits[17][1] = 1.62; QQLimits[17][2] = 1.88; QQLimits[17][3] = 2.19; QQLimits[17][4] = 2.65; QQLimits[17][5] = 3.18; QQLimits[17][6] = 3.76; QQLimits[17][7] = 4.47; QQLimits[17][8] = 5.28; QQLimits[17][9] = 6.165; QQLimits[17][10] = 7.05;
-
-QQLimits[18][0] = 1.38; QQLimits[18][1] = 1.62; QQLimits[18][2] = 1.88; QQLimits[18][3] = 2.19; QQLimits[18][4] = 2.65; QQLimits[18][5] = 3.18; QQLimits[18][6] = 3.76; QQLimits[18][7] = 4.47; QQLimits[18][8] = 5.28; QQLimits[18][9] = 6.165; QQLimits[18][10] = 7.05;
-
-zLimits_pip[0] = 0.059; zLimits_pip[1] = 0.081; zLimits_pip[2] = 0.1065; zLimits_pip[3] = 0.133; zLimits_pip[4] = 0.161; zLimits_pip[5] = 0.1905; zLimits_pip[6] = 0.221; zLimits_pip[7] = 0.2525; zLimits_pip[8] = 0.2855; zLimits_pip[9] = 0.32; zLimits_pip[10] = 0.356; zLimits_pip[11] = 0.394; zLimits_pip[12] = 0.4335; zLimits_pip[13] = 0.4745; zLimits_pip[14] = 0.5175; zLimits_pip[15] = 0.5625; zLimits_pip[16] = 0.6095; zLimits_pip[17] = 0.6585; zLimits_pip[18] = 0.7095; zLimits_pip[19] = 0.763; zLimits_pip[20] = 0.8185; zLimits_pip[21] = 0.8765; zLimits_pip[22] = 0.93;
-PT2Limits_pip[0] = 0.0; PT2Limits_pip[1] = 0.0153; PT2Limits_pip[2] = 0.0459; PT2Limits_pip[3] = 0.0972; PT2Limits_pip[4] = 0.1728; PT2Limits_pip[5] = 0.279; PT2Limits_pip[6] = 0.4239; PT2Limits_pip[7] = 0.6246; PT2Limits_pip[8] = 0.9081; PT2Limits_pip[9] = 1.314; PT2Limits_pip[10] = 1.75;
-zLimits_pim[0] = 0.89; zLimits_pim[1] = 0.9;
-PT2Limits_pim[0] = 0.89; PT2Limits_pim[1] = 0.9;
-}
-if(binSchemeOpt == 7)
-{
-xLimits[0] = 0.1; xLimits[1] = 0.2; xLimits[2] = 0.3; xLimits[3] = 0.4; xLimits[4] = 0.5; xLimits[5] = 0.6;
-QQLimits[0][0] = 1.0; QQLimits[0][1] = 1.3; QQLimits[0][2] = 5.0; QQLimits[1][0] = 1.0; QQLimits[1][1] = 1.7; QQLimits[1][2] = 5.0; QQLimits[2][0] = 1.0; QQLimits[2][1] = 2.2; QQLimits[2][2] = 5.0; QQLimits[3][0] = 1.0; QQLimits[3][1] = 2.9; QQLimits[3][2] = 5.0; QQLimits[4][0] = 1.0; QQLimits[4][1] = 5.0; QQLimits[4][2] = 99.9;
-zLimits_pip[0] = 0.0; zLimits_pip[1] = 0.10; zLimits_pip[2] = 0.20; zLimits_pip[3] = 0.30; zLimits_pip[4] = 0.40; zLimits_pip[5] = 0.50; zLimits_pip[6] = 0.60; zLimits_pip[7] = 0.70; zLimits_pip[8] = 0.80; zLimits_pip[9] = 0.90;
-PT2Limits_pip[0] = 0.0; PT2Limits_pip[1] = 0.10; PT2Limits_pip[2] = 0.20; PT2Limits_pip[3] = 0.30; PT2Limits_pip[4] = 0.40; PT2Limits_pip[5] = 0.50; PT2Limits_pip[6] = 0.60; PT2Limits_pip[7] = 0.70; PT2Limits_pip[8] = 0.80; PT2Limits_pip[9] = 0.90; PT2Limits_pip[10] = 1.00;
-zLimits_pim[0] = 0.0; zLimits_pim[1] = 0.10; zLimits_pim[2] = 0.20; zLimits_pim[3] = 0.30; zLimits_pim[4] = 0.40; zLimits_pim[5] = 0.50; zLimits_pim[6] = 0.60; zLimits_pim[7] = 0.70; zLimits_pim[8] = 0.80; zLimits_pim[9] = 0.90;
-PT2Limits_pim[0] = 0.0; PT2Limits_pim[1] = 0.10; PT2Limits_pim[2] = 0.20; PT2Limits_pim[3] = 0.30; PT2Limits_pim[4] = 0.40; PT2Limits_pim[5] = 0.50; PT2Limits_pim[6] = 0.60; PT2Limits_pim[7] = 0.70; PT2Limits_pim[8] = 0.80; PT2Limits_pim[9] = 0.90; PT2Limits_pim[10] = 1.00;
-}
-if(binSchemeOpt == 8)
-{
-xLimits[0] = 0.10; xLimits[1] = 0.15; xLimits[2] = 0.20; xLimits[3] = 0.25; xLimits[4] = 0.30; xLimits[5] = 0.35; xLimits[6] = 0.40; xLimits[7] = 0.45; xLimits[8] = 0.50; xLimits[9] = 0.55; xLimits[10] = 0.60;
-
-QQLimits[0][0] = 1.00; QQLimits[0][1] = 1.15; QQLimits[0][2] = 1.30; QQLimits[0][3] = 1.45; QQLimits[0][4] = 1.80; QQLimits[1][0] = 1.00; QQLimits[1][1] = 1.15; QQLimits[1][2] = 1.30; QQLimits[1][3] = 1.45; QQLimits[1][4] = 1.80; QQLimits[2][0] = 1.00; QQLimits[2][1] = 1.50; QQLimits[2][2] = 1.70; QQLimits[2][3] = 2.00; QQLimits[2][4] = 2.70; QQLimits[3][0] = 1.00; QQLimits[3][1] = 1.50; QQLimits[3][2] = 1.70; QQLimits[3][3] = 2.00; QQLimits[3][4] = 2.70; QQLimits[4][0] = 1.40; QQLimits[4][1] = 1.90; QQLimits[4][2] = 2.20; QQLimits[4][3] = 2.70; QQLimits[4][4] = 3.50; QQLimits[5][0] = 1.40; QQLimits[5][1] = 1.90; QQLimits[5][2] = 2.20; QQLimits[5][3] = 2.70; QQLimits[5][4] = 3.50; QQLimits[6][0] = 2.20; QQLimits[6][1] = 2.70; QQLimits[6][2] = 2.90; QQLimits[6][3] = 3.40; QQLimits[6][4] = 4.30; QQLimits[7][0] = 2.20; QQLimits[7][1] = 2.70; QQLimits[7][2] = 2.90; QQLimits[7][3] = 3.40; QQLimits[7][4] = 4.30; QQLimits[8][0] = 3.30; QQLimits[8][1] = 4.00; QQLimits[8][2] = 5.00; QQLimits[8][3] = 6.00; QQLimits[8][4] = 7.00; QQLimits[9][0] = 3.30; QQLimits[9][1] = 4.00; QQLimits[9][2] = 5.00; QQLimits[9][3] = 6.00; QQLimits[9][4] = 7.00;
-
-zLimits_pip[0] = 0.000; zLimits_pip[1] = 0.025; zLimits_pip[2] = 0.050; zLimits_pip[3] = 0.075; zLimits_pip[4] = 0.100; zLimits_pip[5] = 0.125; zLimits_pip[6] = 0.150; zLimits_pip[7] = 0.175; zLimits_pip[8] = 0.200; zLimits_pip[9] = 0.225; zLimits_pip[10] = 0.250; zLimits_pip[11] = 0.275; zLimits_pip[12] = 0.300; zLimits_pip[13] = 0.325; zLimits_pip[14] = 0.350; zLimits_pip[15] = 0.375; zLimits_pip[16] = 0.400; zLimits_pip[17] = 0.425; zLimits_pip[18] = 0.450; zLimits_pip[19] = 0.475; zLimits_pip[20] = 0.500; zLimits_pip[21] = 0.525; zLimits_pip[22] = 0.550; zLimits_pip[23] = 0.575; zLimits_pip[24] = 0.600; zLimits_pip[25] = 0.625; zLimits_pip[26] = 0.650; zLimits_pip[27] = 0.675; zLimits_pip[28] = 0.700; zLimits_pip[29] = 0.725; zLimits_pip[30] = 0.750; zLimits_pip[31] = 0.775; zLimits_pip[32] = 0.800; zLimits_pip[33] = 0.825; zLimits_pip[34] = 0.850; zLimits_pip[35] = 0.875; zLimits_pip[36] = 0.900;
-
-PT2Limits_pip[0] = 0.000; PT2Limits_pip[1] = 0.025; PT2Limits_pip[2] = 0.050; PT2Limits_pip[3] = 0.075; PT2Limits_pip[4] = 0.100; PT2Limits_pip[5] = 0.125; PT2Limits_pip[6] = 0.150; PT2Limits_pip[7] = 0.175; PT2Limits_pip[8] = 0.200; PT2Limits_pip[9] = 0.225; PT2Limits_pip[10] = 0.250; PT2Limits_pip[11] = 0.275; PT2Limits_pip[12] = 0.300; PT2Limits_pip[13] = 0.325; PT2Limits_pip[14] = 0.350; PT2Limits_pip[15] = 0.375; PT2Limits_pip[16] = 0.400; PT2Limits_pip[17] = 0.425; PT2Limits_pip[18] = 0.450; PT2Limits_pip[19] = 0.475; PT2Limits_pip[20] = 0.500; PT2Limits_pip[21] = 0.525; PT2Limits_pip[22] = 0.550; PT2Limits_pip[23] = 0.575; PT2Limits_pip[24] = 0.600; PT2Limits_pip[25] = 0.625; PT2Limits_pip[26] = 0.650; PT2Limits_pip[27] = 0.675; PT2Limits_pip[28] = 0.700; PT2Limits_pip[29] = 0.725; PT2Limits_pip[30] = 0.750; PT2Limits_pip[31] = 0.775; PT2Limits_pip[32] = 0.800; PT2Limits_pip[33] = 0.825; PT2Limits_pip[34] = 0.850; PT2Limits_pip[35] = 0.875; PT2Limits_pip[36] = 0.900; PT2Limits_pip[37] = 0.925; PT2Limits_pip[38] = 0.950; PT2Limits_pip[39] = 0.975; PT2Limits_pip[40] = 1.000;
-
-zLimits_pim[0] = 0.000; zLimits_pim[1] = 0.025; zLimits_pim[2] = 0.050; zLimits_pim[3] = 0.075; zLimits_pim[4] = 0.100; zLimits_pim[5] = 0.125; zLimits_pim[6] = 0.150; zLimits_pim[7] = 0.175; zLimits_pim[8] = 0.200; zLimits_pim[9] = 0.225; zLimits_pim[10] = 0.250; zLimits_pim[11] = 0.275; zLimits_pim[12] = 0.300; zLimits_pim[13] = 0.325; zLimits_pim[14] = 0.350; zLimits_pim[15] = 0.375; zLimits_pim[16] = 0.400; zLimits_pim[17] = 0.425; zLimits_pim[18] = 0.450; zLimits_pim[19] = 0.475; zLimits_pim[20] = 0.500; zLimits_pim[21] = 0.525; zLimits_pim[22] = 0.550; zLimits_pim[23] = 0.575; zLimits_pim[24] = 0.600; zLimits_pim[25] = 0.625; zLimits_pim[26] = 0.650; zLimits_pim[27] = 0.675; zLimits_pim[28] = 0.700; zLimits_pim[29] = 0.725; zLimits_pim[30] = 0.750; zLimits_pim[31] = 0.775; zLimits_pim[32] = 0.800; zLimits_pim[33] = 0.825; zLimits_pim[34] = 0.850; zLimits_pim[35] = 0.875; zLimits_pim[36] = 0.900;
-
-PT2Limits_pim[0] = 0.000; PT2Limits_pim[1] = 0.025; PT2Limits_pim[2] = 0.050; PT2Limits_pim[3] = 0.075; PT2Limits_pim[4] = 0.100; PT2Limits_pim[5] = 0.125; PT2Limits_pim[6] = 0.150; PT2Limits_pim[7] = 0.175; PT2Limits_pim[8] = 0.200; PT2Limits_pim[9] = 0.225; PT2Limits_pim[10] = 0.250; PT2Limits_pim[11] = 0.275; PT2Limits_pim[12] = 0.300; PT2Limits_pim[13] = 0.325; PT2Limits_pim[14] = 0.350; PT2Limits_pim[15] = 0.375; PT2Limits_pim[16] = 0.400; PT2Limits_pim[17] = 0.425; PT2Limits_pim[18] = 0.450; PT2Limits_pim[19] = 0.475; PT2Limits_pim[20] = 0.500; PT2Limits_pim[21] = 0.525; PT2Limits_pim[22] = 0.550; PT2Limits_pim[23] = 0.575; PT2Limits_pim[24] = 0.600; PT2Limits_pim[25] = 0.625; PT2Limits_pim[26] = 0.650; PT2Limits_pim[27] = 0.675; PT2Limits_pim[28] = 0.700; PT2Limits_pim[29] = 0.725; PT2Limits_pim[30] = 0.750; PT2Limits_pim[31] = 0.775; PT2Limits_pim[32] = 0.800; PT2Limits_pim[33] = 0.825; PT2Limits_pim[34] = 0.850; PT2Limits_pim[35] = 0.875; PT2Limits_pim[36] = 0.900; PT2Limits_pim[37] = 0.925; PT2Limits_pim[38] = 0.950; PT2Limits_pim[39] = 0.975; PT2Limits_pim[40] = 1.000;
-}
-if(binSchemeOpt == 9)
-{
-xLimits[0] = 0.1; xLimits[1] = 0.2; xLimits[2] = 0.3; xLimits[3] = 0.4; xLimits[4] = 0.5; xLimits[5] = 0.6;
-QQLimits[0][0] = 1.0; QQLimits[0][1] = 1.3; QQLimits[0][2] = 5.0; QQLimits[1][0] = 1.0; QQLimits[1][1] = 1.7; QQLimits[1][2] = 5.0; QQLimits[2][0] = 1.0; QQLimits[2][1] = 2.2; QQLimits[2][2] = 5.0; QQLimits[3][0] = 1.0; QQLimits[3][1] = 2.9; QQLimits[3][2] = 5.0; QQLimits[4][0] = 1.0; QQLimits[4][1] = 5.0; QQLimits[4][2] = 99.9;
-zLimits_pip[0] = 0.0; zLimits_pip[1] = 0.25; zLimits_pip[2] = 0.50; zLimits_pip[3] = 0.75; zLimits_pip[4] = 1.00;
-PT2Limits_pip[0] = 0.0; PT2Limits_pip[1] = 0.25; PT2Limits_pip[2] = 0.50; PT2Limits_pip[3] = 0.75; PT2Limits_pip[4] = 1.00;
-zLimits_pim[0] = 0.0; zLimits_pim[1] = 0.25; zLimits_pim[2] = 0.50; zLimits_pim[3] = 0.75; zLimits_pim[4] = 1.00;
-PT2Limits_pim[0] = 0.0; PT2Limits_pim[1] = 0.25; PT2Limits_pim[2] = 0.50; PT2Limits_pim[3] = 0.75; PT2Limits_pim[4] = 1.00;
-}
-// %%%%% end x, QQ, z, PT2 bin definitions %%%%%
-
 // %%%%% read the input files into a TChain %%%%%
-int NtotalFiles = 11625;
-if(ExpOrSim == 0 && MCversion == 3) NtotalFiles = 33471;
-if(ExpOrSim == 0 && MCversion == 8) NtotalFiles = 32171;
-if(ExpOrSim == 0 && MCversion == 9) NtotalFiles = 1995;
-if(ExpOrSim == 0 && MCversion == 10) NtotalFiles = 3950;
-if(ExpOrSim == 0 && MCversion == 11) NtotalFiles = 3931;
-if(ExpOrSim == 0 && MCversion == 12) NtotalFiles = 32255;
-
-string firstfilename = "";
-string lastfilename = "";
+int NtotalFiles = 5;
 
 ifstream filelist;
 if(ExpOrSim == 0) filelist.open(Form("programFiles/v%i_MCFiles.txt", MCversion));
@@ -215,16 +43,7 @@ for(int k = 1; k < kStop; k++)
 string filename;
 filelist>>filename;
 if(k >= filestart) h22chain->Add(filename.c_str());
-if(k == filestart) firstfilename = filename;
-if(k == kStop - 1) lastfilename = filename;
 }
-
-if(ExpOrSim == 1)
-{
-firstfilename = firstfilename.substr(36,9); // trim the string down so it's just the run#.subrun# (e.g. 38458.a00)
-lastfilename = lastfilename.substr(36,9);
-}
-cout<<"first file: "<<firstfilename<<" ... last file: "<<lastfilename<<endl;
 // %%%%% end read the input files into a TChain %%%%%
 
 // %%%%% define variables %%%%%
@@ -238,51 +57,31 @@ Float_t pi = 3.14159265359;
 Float_t pi180 = pi/180.0;
 Float_t pi180_inv = 180.0/pi;
 
-Int_t mcnentr;
-Int_t mcid[35];
-Float_t mctheta[35];
-Float_t mcphi[35];
-Float_t mcp[35];
+Int_t mcnentr, mcid[35];
+Float_t mctheta[35], mcphi[35], mcp[35];
 
 Int_t gpart;
 
 Float_t p[35];
 Int_t q[35];
-Float_t cx[35];
-Float_t cy[35];
-Float_t cz[35];
-Float_t vz[35];
-Float_t vy[35];
-Float_t vx[35];
-Float_t b[35];
+Float_t cx[35],  cy[35],  cz[35],  vz[35],  vy[35],  vx[35],  b[35];
 
 UChar_t dc_sect[35];
-Float_t tl1_x[35];
-Float_t tl1_y[35];
+Float_t tl1_x[35], tl1_y[35];
 Float_t tl3_x[35]; // used to be dc_xsc in h10
-Float_t tl3_y[35];
-Float_t tl3_z[35];
+Float_t tl3_y[35], tl3_z[35];
 Float_t tl3_cx[35]; // used to be dc_cxsc in h10
-Float_t tl3_cy[35];
-Float_t tl3_cz[35];
+Float_t tl3_cy[35], tl3_cz[35];
 
 UChar_t ec_sect[35];
-Float_t etot[35];
-Float_t ec_ei[35];
-Float_t ec_eo[35];
-Float_t ec_t[35];
-Float_t ech_x[35];
-Float_t ech_y[35];
-Float_t ech_z[35];
+Float_t etot[35],  ec_ei[35],  ec_eo[35],  ec_t[35],  ech_x[35],  ech_y[35],  ech_z[35];
 
 UChar_t sc_sect[35];
-Float_t sc_t[35];
-Float_t sc_r[35];
+Float_t sc_t[35], sc_r[35];
 UChar_t sc_pd[35];
 
 UChar_t cc_sect[35];
-UShort_t cc_segm[35];
-UShort_t nphe[35];
+UShort_t cc_segm[35], nphe[35];
 // %%%%% end define variables %%%%%
 
 // %%%%% set branch addresses %%%%%
@@ -335,196 +134,8 @@ h22chain->SetBranchAddress("cc_segm", cc_segm);
 h22chain->SetBranchAddress("nphe", nphe);
 // %%%%% end set branch addresses %%%%%
 
-// %%%%% stuff for output root files %%%%%
-string outfilename;
-TFile *outputfile;
-if(ExpOrSim == 1) outfilename = Form("data.s%i.n%i.BiSc%i.MoCo%i%i.__%i%i%i%i%i%i%i%i%i%i%i%i%i%i%i%i__.root", filestart, Nfiles, binSchemeOpt, do_momCorr_e, do_momCorr_pions, e_zvertex_strict, e_ECsampling_strict, e_ECoutVin_strict, e_ECgeometric_strict, e_CCthetaMatching_strict, e_R1fid_strict, e_R3fid_strict, e_CCphiMatching_strict, e_CCfiducial_strict, yCut_strict, pip_vvp_strict, pip_R1fid_strict, pip_MXcut_strict, pim_vvp_strict, pim_R1fid_strict, pim_MXcut_strict);
-if(ExpOrSim == 0) outfilename = Form("MonteCarlo_v%i.it%i.s%i.n%i.BiSc%i.__%i%i%i%i%i%i%i%i%i%i%i%i%i%i%i%i__.root", MCversion, accIterationN, filestart, Nfiles, binSchemeOpt, e_zvertex_strict, e_ECsampling_strict, e_ECoutVin_strict, e_ECgeometric_strict, e_CCthetaMatching_strict, e_R1fid_strict, e_R3fid_strict, e_CCphiMatching_strict, e_CCfiducial_strict, yCut_strict, pip_vvp_strict, pip_R1fid_strict, pip_MXcut_strict, pim_vvp_strict, pim_R1fid_strict, pim_MXcut_strict);
-cout<<"output filename is "<<outfilename<<endl;
-outputfile = new TFile(outfilename.c_str(),"recreate");
-// %%%%% end stuff for output root files %%%%%
-
-// %%%%% define histograms %%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-//int NthetaCCBins = 50;
-//int Nrel_phiBins = 50;
-int NthetaCCBins = 1; // keep these small to save space unless you really need to do another thorough study
-int Nrel_phiBins = 1;
-TH1F *h_nphe[NthetaCCBins][Nrel_phiBins];
-for(int k = 0; k < NthetaCCBins; k++) {
-for(int j = 0; j < Nrel_phiBins; j++) {
-h_nphe[k][j] = new TH1F(Form("h_nphe_thCC%i_relph%i", k, j), Form("h_nphe_thCC%i_relph%i", k, j), 300, 0, 300);
-}}
-
-TH2F *QQvsW = new TH2F("QQvsW", "QQvsW", 200, 0, 3.5, 200, 0, 5.5);
-TH2F *yvsx = new TH2F("yvsx", "yvsx", 200, 0.05, 0.65, 200, 0, 1);
-TH2F *yvsx_QQgt1_Wgt2p05 = new TH2F("yvsx_QQgt1_Wgt2p05", "yvsx_QQgt1_Wgt2p05", 200, 0.05, 0.65, 200, 0, 1);
-TH2F *ethvsx = new TH2F("ethvsx", "ethvsx", 200, 0.05, 0.65, 200, 0, 50);
-TH2F *ethvsx_QQgt1_Wgt2p05 = new TH2F("ethvsx_QQgt1_Wgt2p05", "ethvsx_QQgt1_Wgt2p05", 200, 0.05, 0.65, 200, 0, 50);
-
-TH1F *hpip_PT2[2]; // 2 for gen(0) or rec(1)
-if(ExpOrSim == 0) hpip_PT2[0] = new TH1F("hgen_pip_PT2", "hgen_pip_PT2", 200, 0, 1);
-hpip_PT2[1] = new TH1F("hrec_pip_PT2", "hrec_pip_PT2", 200, 0, 1);
-
-TH2F *pip_QQvsx[2]; // 2 for gen(0) or rec(1)
-if(ExpOrSim == 0) pip_QQvsx[0] = new TH2F("gen_pip_QQvsx", "gen_pip_QQvsx", 200, 0.08, 0.64, 200, 0.5, 5);
-pip_QQvsx[1] = new TH2F("rec_pip_QQvsx", "rec_pip_QQvsx", 200, 0.08, 0.64, 200, 0.5, 5);
-
-TH2F *pim_QQvsx[2]; // 2 for gen(0) or rec(1)
-if(ExpOrSim == 0) pim_QQvsx[0] = new TH2F("gen_pim_QQvsx", "gen_pim_QQvsx", 200, 0.08, 0.64, 200, 0.5, 5);
-pim_QQvsx[1] = new TH2F("rec_pim_QQvsx", "rec_pim_QQvsx", 200, 0.08, 0.64, 200, 0.5, 5);
-
-TH2F *pip_PT2vsz[2]; // 2 for gen(0) or rec(1)
-if(ExpOrSim == 0) pip_PT2vsz[0] = new TH2F("gen_pip_PT2vsz", "gen_pip_PT2vsz", 200, 0, 1.05, 200, 0, 1.05);
-pip_PT2vsz[1] = new TH2F("rec_pip_PT2vsz", "rec_pip_PT2vsz", 200, 0, 1.05, 200, 0, 1.05);
-
-TH2F *pim_PT2vsz[2]; // 2 for gen(0) or rec(1)
-if(ExpOrSim == 0) pim_PT2vsz[0] = new TH2F("gen_pim_PT2vsz", "gen_pim_PT2vsz", 200, 0, 1.05, 200, 0, 1.05);
-pim_PT2vsz[1] = new TH2F("rec_pim_PT2vsz", "rec_pim_PT2vsz", 200, 0, 1.05, 200, 0, 1.05);
-
-TH2F *pip_zVmom = new TH2F("rec_pip_zVmom", "rec_pip_zVmom", 200, 0, 4, 200, 0, 1);
-TH2F *pip_zVmom_MXgt145 = new TH2F("rec_pip_zVmom_MXgt145", "rec_pip_zVmom_MXgt145", 200, 0, 4, 200, 0, 1);
-TH2F *pip_zVmom_MXgt155 = new TH2F("rec_pip_zVmom_MXgt155", "rec_pip_zVmom_MXgt155", 200, 0, 4, 200, 0, 1);
-
-TH2F *pip_PT2vsz_xQQbins[NxBins][NQQBins][2]; // 2 for gen(0) or rec(1)
-TH2F *pim_PT2vsz_xQQbins[NxBins][NQQBins][2]; // 2 for gen(0) or rec(1)
-
-int NphihBBins = 1; // the extra "B" is because this binning scheme is for a different purpose than the other one, ... keep this small unless you really need it
-int phihBMin = 0;
-int phihBMax = 180;
-TH2F *pip_PT2vsz_xQQphihBbins[NxBins][NQQBins][NphihBBins][2]; // 2 for gen(0) or rec(1)
-TH2F *pim_PT2vsz_xQQphihBbins[NxBins][NQQBins][NphihBBins][2]; // 2 for gen(0) or rec(1)
-
-TH1F *pip_MX_xQQbins[NxBins][NQQBins][2]; // 2 for gen(0) or rec(1)
-TH1F *pim_MX_xQQbins[NxBins][NQQBins][2]; // 2 for gen(0) or rec(1)
-for(int x = 0; x < NxBins; x++)
-{
-for(int QQ = 0; QQ < NQQBins; QQ++)
-{
-if(ExpOrSim == 0) pip_PT2vsz_xQQbins[x][QQ][0] = new TH2F(Form("gen_pip_PT2vsz_x%iQQ%i", x, QQ), Form("gen_pip_PT2vsz_x%iQQ%i", x, QQ), 200, 0, 1.05, 200, 0, 1.1);
-pip_PT2vsz_xQQbins[x][QQ][1] = new TH2F(Form("rec_pip_PT2vsz_x%iQQ%i", x, QQ), Form("rec_pip_PT2vsz_x%iQQ%i", x, QQ), 200, 0, 1.05, 200, 0, 1.1);
-if(ExpOrSim == 0) pim_PT2vsz_xQQbins[x][QQ][0] = new TH2F(Form("gen_pim_PT2vsz_x%iQQ%i", x, QQ), Form("gen_pim_PT2vsz_x%iQQ%i", x, QQ), 200, 0, 1.05, 200, 0, 1.1);
-pim_PT2vsz_xQQbins[x][QQ][1] = new TH2F(Form("rec_pim_PT2vsz_x%iQQ%i", x, QQ), Form("rec_pim_PT2vsz_x%iQQ%i", x, QQ), 200, 0, 1.05, 200, 0, 1.1);
-
-	for(int phihB = 0; phihB < NphihBBins; phihB++)
-	{
-	if(ExpOrSim == 0) pip_PT2vsz_xQQphihBbins[x][QQ][phihB][0] = new TH2F(Form("gen_pip_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), Form("gen_pip_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), 200, 0, 1.05, 200, 0, 1.1);
-	pip_PT2vsz_xQQphihBbins[x][QQ][phihB][1] = new TH2F(Form("rec_pip_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), Form("rec_pip_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), 200, 0, 1.05, 200, 0, 1.1);
-	if(ExpOrSim == 0) pim_PT2vsz_xQQphihBbins[x][QQ][phihB][0] = new TH2F(Form("gen_pim_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), Form("gen_pim_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), 200, 0, 1.05, 200, 0, 1.1);
-	pim_PT2vsz_xQQphihBbins[x][QQ][phihB][1] = new TH2F(Form("rec_pim_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), Form("rec_pim_PT2vsz_x%iQQ%iphihB%i", x, QQ, phihB), 200, 0, 1.05, 200, 0, 1.1);
-	}
-
-if(ExpOrSim == 0) pip_MX_xQQbins[x][QQ][0] = new TH1F(Form("gen_pip_MX_x%iQQ%i", x, QQ), Form("gen_pip_MX_x%iQQ%i", x, QQ), 200, 0, 4);
-pip_MX_xQQbins[x][QQ][1] = new TH1F(Form("rec_pip_MX_x%iQQ%i", x, QQ), Form("rec_pip_MX_x%iQQ%i", x, QQ), 200, 0, 4);
-if(ExpOrSim == 0) pim_MX_xQQbins[x][QQ][0] = new TH1F(Form("gen_pim_MX_x%iQQ%i", x, QQ), Form("gen_pim_MX_x%iQQ%i", x, QQ), 200, 0, 4);
-pim_MX_xQQbins[x][QQ][1] = new TH1F(Form("rec_pim_MX_x%iQQ%i", x, QQ), Form("rec_pim_MX_x%iQQ%i", x, QQ), 200, 0, 4);
-}
-}
-
-TH1F *h_pip_phih[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][2]; // 2 for gen(0) or rec(1)
-TH1F *pip_phih_pure[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip];
-TH1F *pip_phih_impure[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip];
-
-TH1F *h_pim_phih[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][2];
-TH1F *pim_phih_pure[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim];
-TH1F *pim_phih_impure[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim];
-
-TH1F *pip_MX_xQQzPT2bins[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][2]; // 2 for gen(0) or rec(1)
-TH1F *pim_MX_xQQzPT2bins[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][2]; // 2 for gen(0) or rec(1)
-
-int NmomBins = 5; // to bin the resolutions in momentum
-float momMin = 0;
-float momMax = 4;
-TH1F *pip_mom_res[NmomBins];
-TH1F *pip_theta_res[NmomBins];
-TH1F *pip_phi_res[NmomBins];
-for(int N = 0; N < NmomBins; N++)
-{
-if(ExpOrSim == 0)
-{
-pip_mom_res[N] = new TH1F(Form("pip_mom_res%i",N), Form("pip_mom_res%i",N), 100, -0.3, 0.3);
-pip_theta_res[N] = new TH1F(Form("pip_theta_res%i",N), Form("pip_theta_res%i",N), 100, -1, 1);
-pip_phi_res[N] = new TH1F(Form("pip_phi_res%i",N), Form("pip_phi_res%i",N), 100, -7, 7);
-}
-}
-
-//   TH1F *pip_x_res[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pip_QQ_res[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pip_z_res[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pip_PT2_res[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pip_phih_res[NxBins][NQQBins][NzBins_pip][NPT2Bins_pip][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pim_x_res[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pim_QQ_res[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pim_z_res[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pim_PT2_res[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][NphihBins]; // MC only. res = gen - rec
-//   TH1F *pim_phih_res[NxBins][NQQBins][NzBins_pim][NPT2Bins_pim][NphihBins]; // MC only. res = gen - rec
-//   // binning these in 5D creates ~100,000 plots, then doing it for x,QQ,z,PT2,phih for pi+/- creates ~1M plots. comment out when done.
-
-for(int x = 0; x < NxBins; x++){
-for(int QQ = 0; QQ < NQQBins; QQ++){
-for(int z = 0; z < NzBins_pip; z++){
-for(int PT2 = 0; PT2 < NPT2Bins_pip; PT2++){
-if(ExpOrSim == 0)
-{
-h_pip_phih[x][QQ][z][PT2][0] = new TH1F(Form("gen_pip_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("gen_pip_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-h_pip_phih[x][QQ][z][PT2][0]->Sumw2();
-pip_phih_pure[x][QQ][z][PT2] = new TH1F(Form("pip_phih_pure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("pip_phih_pure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-pip_phih_impure[x][QQ][z][PT2] = new TH1F(Form("pip_phih_impure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("pip_phih_impure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-
-pip_MX_xQQzPT2bins[x][QQ][z][PT2][0] = new TH1F(Form("gen_pip_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("gen_pip_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), 200, 0.5, 3.0);
-
-//   for(int phih = 0; phih < NphihBins; phih++)
-//   {
-//   pip_x_res[x][QQ][z][PT2][phih] = new TH1F(Form("pip_x_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pip x res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pip_QQ_res[x][QQ][z][PT2][phih] = new TH1F(Form("pip_QQ_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pip QQ res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pip_z_res[x][QQ][z][PT2][phih] = new TH1F(Form("pip_z_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pip z res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pip_PT2_res[x][QQ][z][PT2][phih] = new TH1F(Form("pip_PT2_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pip PT2 res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pip_phih_res[x][QQ][z][PT2][phih] = new TH1F(Form("pip_phih_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pip phih res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -5, 5);
-//   }
-}
-
-h_pip_phih[x][QQ][z][PT2][1] = new TH1F(Form("rec_pip_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("rec_pip_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-h_pip_phih[x][QQ][z][PT2][1]->Sumw2();
-
-pip_MX_xQQzPT2bins[x][QQ][z][PT2][1] = new TH1F(Form("rec_pip_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("rec_pip_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), 200, 0.5, 3.0);
-}}}}
-
-for(int x = 0; x < NxBins; x++){
-for(int QQ = 0; QQ < NQQBins; QQ++){
-for(int z = 0; z < NzBins_pim; z++){
-for(int PT2 = 0; PT2 < NPT2Bins_pim; PT2++){
-if(ExpOrSim == 0)
-{
-h_pim_phih[x][QQ][z][PT2][0] = new TH1F(Form("gen_pim_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("gen_pim_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-h_pim_phih[x][QQ][z][PT2][0]->Sumw2();
-pim_phih_pure[x][QQ][z][PT2] = new TH1F(Form("pim_phih_pure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("pim_phih_pure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-pim_phih_impure[x][QQ][z][PT2] = new TH1F(Form("pim_phih_impure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("pim_phih_impure_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-
-pim_MX_xQQzPT2bins[x][QQ][z][PT2][0] = new TH1F(Form("gen_pim_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("gen_pim_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), 200, 0.5, 3.0);
-
-//   for(int phih = 0; phih < NphihBins; phih++)
-//   {
-//   pim_x_res[x][QQ][z][PT2][phih] = new TH1F(Form("pim_x_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pim x res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pim_QQ_res[x][QQ][z][PT2][phih] = new TH1F(Form("pim_QQ_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pim QQ res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pim_z_res[x][QQ][z][PT2][phih] = new TH1F(Form("pim_z_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pim z res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pim_PT2_res[x][QQ][z][PT2][phih] = new TH1F(Form("pim_PT2_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pim PT2 res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -0.05, 0.05);
-//   pim_phih_res[x][QQ][z][PT2][phih] = new TH1F(Form("pim_phih_res_x%i_QQ%i_z%i_PT2%i_phih%i",x,QQ,z,PT2,phih), Form("pim phih res. (gen - rec) x%i QQ%i z%i PT2%i phih%i",x,QQ,z,PT2,phih), 100, -5, 5);
-//   }
-}
-
-h_pim_phih[x][QQ][z][PT2][1] = new TH1F(Form("rec_pim_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("rec_pim_phih_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), NphihBins, phihMin, phihMax);
-h_pim_phih[x][QQ][z][PT2][1]->Sumw2();
-
-pim_MX_xQQzPT2bins[x][QQ][z][PT2][1] = new TH1F(Form("rec_pim_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), Form("rec_pim_MX_x%i_QQ%i_z%i_PT2%i",x,QQ,z,PT2), 200, 0.5, 3.0);
-}}}}
-// %%%%% end define histograms %%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 // %%%%% POTATOES %%%%%
 // %%%%%%%%%%%%%%%%%%%%
-cout<<"entries: "<<h22chain->GetEntries()/1000<<" thousand"<<endl;
-
 for(int i = 0; i < h22chain->GetEntries(); i++) // loop over entries
 {
 h22chain->GetEntry(i);
@@ -537,6 +148,7 @@ if((mcid[1] == 211 && mcid[2] == 2112) || (mcid[1] == 2112 && mcid[2] == 211)) g
 
 if(genExclusiveEvent == 0)
 {
+cout<<"event #"<<i<<endl;
 
 string currentrunno_string = "-123";
 if(ExpOrSim == 1)
@@ -568,6 +180,8 @@ prot_index[0] = genIndices[2];
 e_index[1] = eID(gpart, q, p, cc_sect, sc_sect, ec_sect, dc_sect, cx, cy, cz, tl1_x, tl1_y, tl3_x, tl3_y, tl3_z, tl3_cx, tl3_cy, tl3_cz, e_zvertex_strict, vz, vy, vx, e_ECsampling_strict, ExpOrSim, etot, e_ECoutVin_strict, ec_ei, ech_x, ech_y, ech_z, e_CCthetaMatching_strict, cc_segm, e_ECgeometric_strict, e_R1fid_strict, e_R3fid_strict, e_CCphiMatching_strict, sc_pd, e_CCfiducial_strict);
 // %%%%% end electron ID %%%%%
 
+cout<<"e- indices (gen rec): "<<e_index[0]<<" "<<e_index[1]<<endl;
+
 // %%%%% set e- 3 and 4 vectors %%%%%
 // can't set the vectors in a loop because gen uses p, theta, phi but rec uses p, cx, cy, cz
 TVector3 V3_e[2]; // 2 for gen(0) and rec(1)
@@ -583,7 +197,6 @@ if(e_index[1] > -122)
 {
 V3_e[1].SetXYZ(p[e_index[1]]*cx[e_index[1]], p[e_index[1]]*cy[e_index[1]], p[e_index[1]]*cz[e_index[1]]);
 V4_e[1].SetXYZT(V3_e[1].X(), V3_e[1].Y(), V3_e[1].Z(), sqrt(V3_e[1].Mag2() + pow(e_mass,2)));
-if(do_momCorr_e && ExpOrSim == 1) V4_e[1] = MomCorr->PcorN(V4_e[1], -1, 11);
 }
 
 TVector3 V3_H[2];
@@ -632,13 +245,11 @@ if(pip_index[1] > -122)
 {
 V3_pip[1].SetXYZ(p[pip_index[1]]*cx[pip_index[1]], p[pip_index[1]]*cy[pip_index[1]], p[pip_index[1]]*cz[pip_index[1]]);
 V4_pip[1].SetXYZT(V3_pip[1].X(), V3_pip[1].Y(), V3_pip[1].Z(), sqrt(V3_pip[1].Mag2() + pow(pip_mass,2)));
-if(do_momCorr_pions && ExpOrSim == 1) V4_pip[1] = MomCorr->PcorN(V4_pip[1], 1, 211);
 }
 if(pim_index[1] > -122)
 {
 V3_pim[1].SetXYZ(p[pim_index[1]]*cx[pim_index[1]], p[pim_index[1]]*cy[pim_index[1]], p[pim_index[1]]*cz[pim_index[1]]);
 V4_pim[1].SetXYZT(V3_pim[1].X(), V3_pim[1].Y(), V3_pim[1].Z(), sqrt(V3_pim[1].Mag2() + pow(pim_mass,2)));
-if(do_momCorr_pions && ExpOrSim == 1) V4_pim[1] = MomCorr->PcorN(V4_pim[1], -1, -211);
 }
 if(prot_index[1] > -122)
 {
@@ -676,439 +287,7 @@ V4_X_epimX[j] = V4_H[j] - V4_pim[j];
 }
 // %%%%%%%%% end set remaining 4-vectors (and 3-vectors)  %%%%%%%%%%%
 
-// %%%%%%%%% analysis of kinematics %%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-float W[2], y[2], QQ[2], x[2], pip_z[2], pip_PT2[2], pip_phih[2], MX_epipX[2];
-int xBin[2] = {-1234, -1234};
-int QQBin[2] = {-1234, -1234};
-int pip_zBin[2] = {-1234, -1234};
-int pip_PT2Bin[2] = {-1234, -1234};
-int pip_phihBin[2] = {-1234, -1234};
-int pip_phihBBin[2] = {-1234, -1234};
-
-float pim_z[2], pim_PT2[2], pim_phih[2], MX_epimX[2];
-int pim_zBin[2] = {-1234, -1234};
-int pim_PT2Bin[2] = {-1234, -1234};
-int pim_phihBin[2] = {-1234, -1234};
-int pim_phihBBin[2] = {-1234, -1234};
-
-// set some values:
-for(int j = 1; j >= ExpOrSim; j--)
-{
-W[j] = V4_H[j].Mag();
-y[j] = V4_q[j].T()/Beam_Energy;
-QQ[j] = -V4_q[j]*V4_q[j];
-x[j] = QQ[j]/(2.0*V4_q[j].T()*prot_mass);
-
-pip_z[j] = V4_pip[j].T()/V4_q[j].T();
-pip_PT2[j] = V4_pip_prime[j].Perp()*V4_pip_prime[j].Perp();
-pip_phih[j] = pi180_inv*V4_pip_prime[j].Phi();
-MX_epipX[j] = V4_X_epipX[j].Mag();
-
-pim_z[j] = V4_pim[j].T()/V4_q[j].T();
-pim_PT2[j] = V4_pim_prime[j].Perp()*V4_pim_prime[j].Perp();
-pim_phih[j] = pi180_inv*V4_pim_prime[j].Phi();
-MX_epimX[j] = V4_X_epimX[j].Mag();
-
-if(pip_index[j] >= 0 || pim_index[j] >= 0)
-{
-if(x[j] >= xLimits[0] && x[j] < xLimits[NxBins])
-{
-xBin[j] = 0;
-while(x[j] >= xLimits[xBin[j]+1]) xBin[j]++;
-
-if(QQ[j] >= QQLimits[xBin[j]][0] && QQ[j] < QQLimits[xBin[j]][NQQBins])
-{
-QQBin[j] = 0;
-while(QQ[j] >= QQLimits[xBin[j]][QQBin[j]+1]) QQBin[j]++;
-
-if(pip_index[j] >= 0 && pip_z[j] >= zLimits_pip[0] && pip_z[j] < zLimits_pip[NzBins_pip] && pip_PT2[j] >= PT2Limits_pip[0] && pip_PT2[j] < PT2Limits_pip[NPT2Bins_pip])
-{
-pip_zBin[j] = 0;
-while(pip_z[j] >= zLimits_pip[pip_zBin[j]+1]) pip_zBin[j]++;
-pip_PT2Bin[j] = 0;
-while(pip_PT2[j] >= PT2Limits_pip[pip_PT2Bin[j]+1]) pip_PT2Bin[j]++;
-
-pip_phihBin[j] = static_cast<int>((pip_phih[j] - phihMin)/((phihMax - phihMin)/NphihBins));
-pip_phihBBin[j] = static_cast<int>((fabs(pip_phih[j]) - phihBMin)/((phihBMax - phihBMin)/NphihBBins));
-}
-
-if(pim_index[j] >= 0 && pim_z[j] >= zLimits_pim[0] && pim_z[j] < zLimits_pim[NzBins_pim] && pim_PT2[j] >= PT2Limits_pim[0] && pim_PT2[j] < PT2Limits_pim[NPT2Bins_pim])
-{
-pim_zBin[j] = 0;
-while(pim_z[j] >= zLimits_pim[pim_zBin[j]+1]) pim_zBin[j]++;
-pim_PT2Bin[j] = 0;
-while(pim_PT2[j] >= PT2Limits_pim[pim_PT2Bin[j]+1]) pim_PT2Bin[j]++;
-
-pim_phihBin[j] = static_cast<int>((pim_phih[j] - phihMin)/((phihMax - phihMin)/NphihBins));
-pim_phihBBin[j] = static_cast<int>((fabs(pim_phih[j]) - phihBMin)/((phihBMax - phihBMin)/NphihBBins));
-}
-
-}
-}
-
-}
-}
-
-// see if the event is a keeper for my final sample
-bool pip_keeper[2] = {0, 0};
-bool pim_keeper[2] = {0, 0};
-for(int j = 1; j >= ExpOrSim; j--)
-{
-if(xBin[j] > -1 && QQBin[j] > -1 && pip_zBin[j] > -1 && pip_PT2Bin[j] > -1 && W[j] > WMin && y[j] < yMax) pip_keeper[j] = 1;
-if(xBin[j] > -1 && QQBin[j] > -1 && pim_zBin[j] > -1 && pim_PT2Bin[j] > -1 && W[j] > WMin && y[j] < yMax) pim_keeper[j] = 1;
-}
-
-/////// get weight factors: ///////
-///////////////////////////////////
-float pip_weight = 1.0;
-float pim_weight = 1.0;
-
-// iteration 1 = default model in haprad:
-// pip:
-if(ExpOrSim == 0 && accIterationN == 1 && xBin[0] > -1 && QQBin[0] > -1 && W[0] > WMin && y[0] < yMax && pip_index[0] >= 0)
-{
-ifstream term0file(Form("/scratch/dflt_term0_fromHAPRAD/dflt_term0_fromHAPRAD_BiSc%i_x%iQQ%iz%iPT2%i.txt", binSchemeOpt, xBin[0], QQBin[0], pip_zBin[0], pip_PT2Bin[0]));
-if(term0file)
-{
-float term0;
-term0file>>term0;
-
-// from semi_inclusive_model.f: "Parton transverse momentum distribution (Gaussian fit)"
-float ac = 1.2025E-10;
-float bc = -5.2703E-02;
-float cc = 3.7467E-01;
-float dc = 6.5397E-02;
-float ec = -2.2136E-01;
-float fc = -1.0621E-01;
-
-float sgmpt = ac + bc*x[0] + cc*pip_z[0] + dc*x[0]*x[0] + ec*pip_z[0]*pip_z[0] + fc*x[0]*pip_z[0];
-if(sgmpt < 0.02) sgmpt = 0.02;
-if(sgmpt > 0.15) sgmpt = 0.15;
-float GTMD = exp((-(pip_PT2[0] + 0.0))/(2.0*sgmpt))*(1.0/(2.0*pi*sgmpt)); // the 0.0 part comes from "2*pl^2" in haprad, but "pl" seems to always be zero
-float pi_thresh = sqrt(1.0 - ((prot_mass + pip_mass)*(prot_mass + pip_mass))/pow(MX_epipX[0], 2.0));
-float rt = 1.0 - y[0] - (prot_mass*x[0]*y[0])/(2.0*Beam_Energy);
-float rtz = sqrt(rt/(1.0 + ((2.0*prot_mass*x[0])/(y[0]*Beam_Energy))));
-float h3 = -0.36544E-03*pow(x[0], -2.1855)*pow(1.0 - x[0], 3.4176)*pow(pip_z[0], -1.7567)*pow(1.0 - pip_z[0], 1.1272)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 8.9985);
-float h4 = 0.10908E-02*pow(x[0], -0.35265E-06)*pow(1.0 - x[0], 0.30276E-07)*pow(pip_z[0], -0.66787)*pow(1.0 - pip_z[0], 3.5868)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 6.8777/x[0]);
-float Ac = (h3*GTMD*pi_thresh*sqrt(pip_PT2[0]/QQ[0])*(2.0 - y[0])*rtz)/term0;
-float Acc = (h4*GTMD*pi_thresh*(pip_PT2[0]/QQ[0])*rtz*rtz)/term0;
-
-if(Ac > 0.45) Ac = 0.45; // don't want huge moments
-if(Ac < -0.45) Ac = -0.45;
-if(Acc > 0.45) Acc = 0.45;
-if(Acc < -0.45) Acc = -0.45;
-
-pip_weight = 1.0 + Ac*cos(pip_phih[0]*pi180) + Acc*cos(2.0*pip_phih[0]*pi180);
-if(pip_weight != pip_weight) pip_weight = 1.0; // to remove the occasional nan
-}
-term0file.close();
-}
-
-// iteration 2 = from Nick
-// pip:
-if(ExpOrSim == 0 && accIterationN == 2 && xBin[0] > -1 && QQBin[0] > -1 && W[0] > WMin && y[0] < yMax && pip_index[0] >= 0)
-{
-ifstream term0file(Form("/scratch/dflt_term0_fromHAPRAD/dflt_term0_fromHAPRAD_BiSc%i_x%iQQ%iz%iPT2%i.txt", binSchemeOpt, xBin[0], QQBin[0], pip_zBin[0], pip_PT2Bin[0]));
-if(term0file)
-{
-float term0;
-term0file>>term0;
-
-// from semi_inclusive_model.f: "Parton transverse momentum distribution (Gaussian fit)"
-float ac = 1.2025E-10;
-float bc = -5.2703E-02;
-float cc = 3.7467E-01;
-float dc = 6.5397E-02;
-float ec = -2.2136E-01;
-float fc = -1.0621E-01;
-
-float sgmpt = ac + bc*x[0] + cc*pip_z[0] + dc*x[0]*x[0] + ec*pip_z[0]*pip_z[0] + fc*x[0]*pip_z[0];
-if(sgmpt < 0.02) sgmpt = 0.02;
-if(sgmpt > 0.15) sgmpt = 0.15;
-float GTMD = exp((-(pip_PT2[0] + 0.0))/(2.0*sgmpt))*(1.0/(2.0*pi*sgmpt)); // the 0.0 part comes from "2*pl^2" in haprad, but "pl" seems to always be zero
-float pi_thresh = sqrt(1.0 - ((prot_mass + pip_mass)*(prot_mass + pip_mass))/pow(MX_epipX[0], 2.0));
-float rt = 1.0 - y[0] - (prot_mass*x[0]*y[0])/(2.0*Beam_Energy);
-float rtz = sqrt(rt/(1.0 + ((2.0*prot_mass*x[0])/(y[0]*Beam_Energy))));
-float h3 = -0.36544E-03*pow(x[0], -2.1855)*pow(1.0 - x[0], 3.4176)*pow(pip_z[0], -1.7567)*pow(1.0 - pip_z[0], 1.1272)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 8.9985);
-h3 = h3*12.0*(-0.03 + x[0]); // from Nick: H3_Updated = h3(default)* 12*(-0.03 + x)
-float h4 = 0.10908E-02*pow(x[0], -0.35265E-06)*pow(1.0 - x[0], 0.30276E-07)*pow(pip_z[0], -0.66787)*pow(1.0 - pip_z[0], 3.5868)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 5.1777/x[0]);
-h4 = h4*6.0*(2.0 - x[0]); // from Nick: H4_Updated = 6*(2-x)*h4[default, bb = 5.1777] ... note that bb is changed above
-float Ac = (h3*GTMD*pi_thresh*sqrt(pip_PT2[0]/QQ[0])*(2.0 - y[0])*rtz)/term0;
-float Acc = (h4*GTMD*pi_thresh*(pip_PT2[0]/QQ[0])*rtz*rtz)/term0;
-
-if(Ac > 0.45) Ac = 0.45; // don't want huge moments
-if(Ac < -0.45) Ac = -0.45;
-if(Acc > 0.45) Acc = 0.45;
-if(Acc < -0.45) Acc = -0.45;
-
-pip_weight = 1.0 + Ac*cos(pip_phih[0]*pi180) + Acc*cos(2.0*pip_phih[0]*pi180);
-if(pip_weight != pip_weight) pip_weight = 1.0; // to remove the occasional nan
-}
-term0file.close();
-}
-
-// iteration 1 = default model in haprad:
-// pim:
-if(ExpOrSim == 0 && accIterationN == 1 && xBin[0] > -1 && QQBin[0] > -1 && W[0] > WMin && y[0] < yMax && pim_index[0] >= 0)
-{
-ifstream term0file(Form("/scratch/dflt_term0_fromHAPRAD/dflt_term0_fromHAPRAD_BiSc%i_x%iQQ%iz%iPT2%i.txt", binSchemeOpt, xBin[0], QQBin[0], pim_zBin[0], pim_PT2Bin[0]));
-if(term0file)
-{
-float term0;
-term0file>>term0;
-
-// from semi_inclusive_model.f: "Parton transverse momentum distribution (Gaussian fit)"
-float ac = 1.2025E-10;
-float bc = -5.2703E-02;
-float cc = 3.7467E-01;
-float dc = 6.5397E-02;
-float ec = -2.2136E-01;
-float fc = -1.0621E-01;
-
-float sgmpt = ac + bc*x[0] + cc*pim_z[0] + dc*x[0]*x[0] + ec*pim_z[0]*pim_z[0] + fc*x[0]*pim_z[0];
-if(sgmpt < 0.02) sgmpt = 0.02;
-if(sgmpt > 0.15) sgmpt = 0.15;
-float GTMD = exp((-(pim_PT2[0] + 0.0))/(2.0*sgmpt))*(1.0/(2.0*pi*sgmpt)); // the 0.0 part comes from "2*pl^2" in haprad, but "pl" seems to always be zero
-float pi_thresh = sqrt(1.0 - ((prot_mass + pim_mass)*(prot_mass + pim_mass))/pow(MX_epimX[0], 2.0));
-float rt = 1.0 - y[0] - (prot_mass*x[0]*y[0])/(2.0*Beam_Energy);
-float rtz = sqrt(rt/(1.0 + ((2.0*prot_mass*x[0])/(y[0]*Beam_Energy))));
-float h3 = -0.36544E-03*pow(x[0], -2.1855)*pow(1.0 - x[0], 3.4176)*pow(pim_z[0], -1.7567)*pow(1.0 - pim_z[0], 1.1272)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 8.9985);
-float h4 = 0.10908E-02*pow(x[0], -0.35265E-06)*pow(1.0 - x[0], 0.30276E-07)*pow(pim_z[0], -0.66787)*pow(1.0 - pim_z[0], 3.5868)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 6.8777/x[0]);
-float Ac = (h3*GTMD*pi_thresh*sqrt(pim_PT2[0]/QQ[0])*(2.0 - y[0])*rtz)/term0;
-float Acc = (h4*GTMD*pi_thresh*(pim_PT2[0]/QQ[0])*rtz*rtz)/term0;
-
-if(Ac > 0.45) Ac = 0.45; // don't want huge moments
-if(Ac < -0.45) Ac = -0.45;
-if(Acc > 0.45) Acc = 0.45;
-if(Acc < -0.45) Acc = -0.45;
-
-pim_weight = 1.0 + Ac*cos(pim_phih[0]*pi180) + Acc*cos(2.0*pim_phih[0]*pi180);
-if(pim_weight != pim_weight) pim_weight = 1.0; // to remove the occasional nan
-}
-term0file.close();
-}
-
-// iteration 2 = from Nick
-// pim:
-if(ExpOrSim == 0 && accIterationN == 2 && xBin[0] > -1 && QQBin[0] > -1 && W[0] > WMin && y[0] < yMax && pim_index[0] >= 0)
-{
-ifstream term0file(Form("/scratch/dflt_term0_fromHAPRAD/dflt_term0_fromHAPRAD_BiSc%i_x%iQQ%iz%iPT2%i.txt", binSchemeOpt, xBin[0], QQBin[0], pim_zBin[0], pim_PT2Bin[0]));
-if(term0file)
-{
-float term0;
-term0file>>term0;
-
-// from semi_inclusive_model.f: "Parton transverse momentum distribution (Gaussian fit)"
-float ac = 1.2025E-10;
-float bc = -5.2703E-02;
-float cc = 3.7467E-01;
-float dc = 6.5397E-02;
-float ec = -2.2136E-01;
-float fc = -1.0621E-01;
-
-float sgmpt = ac + bc*x[0] + cc*pim_z[0] + dc*x[0]*x[0] + ec*pim_z[0]*pim_z[0] + fc*x[0]*pim_z[0];
-if(sgmpt < 0.02) sgmpt = 0.02;
-if(sgmpt > 0.15) sgmpt = 0.15;
-float GTMD = exp((-(pim_PT2[0] + 0.0))/(2.0*sgmpt))*(1.0/(2.0*pi*sgmpt)); // the 0.0 part comes from "2*pl^2" in haprad, but "pl" seems to always be zero
-float pi_thresh = sqrt(1.0 - ((prot_mass + pim_mass)*(prot_mass + pim_mass))/pow(MX_epimX[0], 2.0));
-float rt = 1.0 - y[0] - (prot_mass*x[0]*y[0])/(2.0*Beam_Energy);
-float rtz = sqrt(rt/(1.0 + ((2.0*prot_mass*x[0])/(y[0]*Beam_Energy))));
-float h3 = -0.36544E-03*pow(x[0], -2.1855)*pow(1.0 - x[0], 3.4176)*pow(pim_z[0], -1.7567)*pow(1.0 - pim_z[0], 1.1272)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 8.9985);
-// from Nick: For H3 default values look reasonable.
-float h4 = 0.10908E-02*pow(x[0], -0.35265E-06)*pow(1.0 - x[0], 0.30276E-07)*pow(pim_z[0], -0.66787)*pow(1.0 - pim_z[0], 3.5868)*pow(log(QQ[0]/(0.25*0.25))/log(1.0/(0.25*0.25)), 2.077/x[0]);
-h4 = h4*75.0*(2.0 - x[0]); // from Nick: H4_updated = 75*(2-x)*h4_default[bb = 2.077]
-float Ac = (h3*GTMD*pi_thresh*sqrt(pim_PT2[0]/QQ[0])*(2.0 - y[0])*rtz)/term0;
-float Acc = (h4*GTMD*pi_thresh*(pim_PT2[0]/QQ[0])*rtz*rtz)/term0;
-
-if(Ac > 0.45) Ac = 0.45; // don't want huge moments
-if(Ac < -0.45) Ac = -0.45;
-if(Acc > 0.45) Acc = 0.45;
-if(Acc < -0.45) Acc = -0.45;
-
-pim_weight = 1.0 + Ac*cos(pim_phih[0]*pi180) + Acc*cos(2.0*pim_phih[0]*pi180);
-if(pim_weight != pim_weight) pim_weight = 1.0; // to remove the occasional nan
-}
-term0file.close();
-}
-
-//////////////////// old bin by bin weighting: /////////////////////
-//   // get pip_weight factor:
-//   float pip_weight = 1.0;
-//   ifstream pip_weightFile("/scratch/FaKe___FiLe.txt"); // so if(pip_weightFile) will be false initially
-//   if(ExpOrSim == 0 && accIterationN > 0)
-//   {
-//   if(pip_keeper[0])
-//   {
-//   pip_weightFile.open(Form("/scratch/AcAccfiles/AcAcc_pip_it%i_BiSc%i_x%iQQ%iz%iPT2%i.txt", accIterationN-1, binSchemeOpt, xBin[0], QQBin[0], pip_zBin[0], pip_PT2Bin[0]));
-//   if(pip_weightFile)
-//   {
-//   float A, Ae, A2, A2e;
-//   pip_weightFile>>A>>Ae>>A2>>A2e;
-//   pip_weight = 1.0 + A*cos(pip_phih[0]*pi180) + A2*cos(2.0*pip_phih[0]*pi180);
-//   }
-//   }
-//   
-//   if(!pip_weightFile && pip_keeper[1])
-//   {
-//   pip_weightFile.open(Form("/scratch/AcAccfiles/AcAcc_pip_it%i_BiSc%i_x%iQQ%iz%iPT2%i.txt", accIterationN-1, xBin[1], QQBin[1], pip_zBin[1], pip_PT2Bin[1]));
-//   if(pip_weightFile)
-//   {
-//   float A, Ae, A2, A2e;
-//   pip_weightFile>>A>>Ae>>A2>>A2e;
-//   pip_weight = 1.0 + A*cos(pip_phih[1]*pi180) + A2*cos(2.0*pip_phih[1]*pi180);
-//   }
-//   }
-//   }
-//   pip_weightFile.close();
-//   if(pip_weight < 0.01) pip_weight = 0.01; // to avoid small/negative pip_weights
-//   // end get pip_weight factor
-//   
-//   // get pim_weight factor:
-//   float pim_weight = 1.0;
-//   ifstream pim_weightFile("/scratch/FaKe___FiLe.txt"); // so if(pim_weightFile) will be false initially
-//   if(ExpOrSim == 0 && accIterationN > 0)
-//   {
-//   if(pim_keeper[0])
-//   {
-//   pim_weightFile.open(Form("/scratch/AcAccfiles/AcAcc_pim_it%i_BiSc%i_x%iQQ%iz%iPT2%i.txt", accIterationN-1, binSchemeOpt, xBin[0], QQBin[0], pim_zBin[0], pim_PT2Bin[0]));
-//   if(pim_weightFile)
-//   {
-//   float A, Ae, A2, A2e;
-//   pim_weightFile>>A>>Ae>>A2>>A2e;
-//   pim_weight = 1.0 + A*cos(pim_phih[0]*pi180) + A2*cos(2.0*pim_phih[0]*pi180);
-//   }
-//   }
-//   
-//   if(!pim_weightFile && pim_keeper[1])
-//   {
-//   pim_weightFile.open(Form("/scratch/AcAccfiles/AcAcc_pim_it%i_BiSc%i_x%iQQ%iz%iPT2%i.txt", accIterationN-1, binSchemeOpt, xBin[1], QQBin[1], pim_zBin[1], pim_PT2Bin[1]));
-//   if(pim_weightFile)
-//   {
-//   float A, Ae, A2, A2e;
-//   pim_weightFile>>A>>Ae>>A2>>A2e;
-//   pim_weight = 1.0 + A*cos(pim_phih[1]*pi180) + A2*cos(2.0*pim_phih[1]*pi180);
-//   }
-//   }
-//   }
-//   pim_weightFile.close();
-//   if(pim_weight < 0.01) pim_weight = 0.01; // to avoid small/negative pim_weights
-//   // end get pim_weight factor
-
-// some phase space plots:
-if(e_index[1] > -1) QQvsW->Fill(W[1], QQ[1]);
-if(e_index[1] > -1) yvsx->Fill(x[1], y[1]);
-if(e_index[1] > -1 && QQ[1] > 1 && W[1] > 2.05) yvsx_QQgt1_Wgt2p05->Fill(x[1], y[1]);
-if(e_index[1] > -1) ethvsx->Fill(x[1], pi180_inv*V3_e[1].Theta());
-if(e_index[1] > -1 && QQ[1] > 1 && W[1] > 2.05) ethvsx_QQgt1_Wgt2p05->Fill(x[1], pi180_inv*V3_e[1].Theta());
-
-if(e_index[1] > -1 && QQ[1] > 1 && W[1] > 2.05)
-{
-float tCC = 57.2957795*get_thetaCC(tl3_x[e_index[1]], tl3_y[e_index[1]], tl3_z[e_index[1]], tl3_cx[e_index[1]], tl3_cy[e_index[1]], tl3_cz[e_index[1]]);
-float prel = get_rel_phi(pi180_inv*V4_e[1].Phi());
-int thetaCCbin = static_cast<int>((tCC - 5.0)/((50.0 - 5.0)/NthetaCCBins));
-int relphibin = static_cast<int>((prel - -30.0)/((30.0 - -30.0)/Nrel_phiBins));
-if(thetaCCbin < NthetaCCBins && thetaCCbin >= 0 && relphibin < Nrel_phiBins && relphibin >= 0) h_nphe[thetaCCbin][relphibin]->Fill(nphe[e_index[1]]);
-}
-
-for(int j = 1; j >= ExpOrSim; j--)
-{
-if(pip_keeper[j] && pip_z[j] > 0.4 && pip_z[j] < 0.7) hpip_PT2[j]->Fill(pip_PT2[j]);
-if(e_index[j] > -1 && pip_index[j] > -1) pip_QQvsx[j]->Fill(x[j], QQ[j]);
-if(e_index[j] > -1 && pip_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax) pip_PT2vsz[j]->Fill(pip_z[j], pip_PT2[j]);
-if(e_index[j] > -1 && pim_index[j] > -1) pim_QQvsx[j]->Fill(x[j], QQ[j]);
-if(e_index[j] > -1 && pim_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax) pim_PT2vsz[j]->Fill(pim_z[j], pim_PT2[j]);
-
-if(e_index[j] > -1 && pip_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1) pip_PT2vsz_xQQbins[xBin[j]][QQBin[j]][j]->Fill(pip_z[j], pip_PT2[j]);
-if(e_index[j] > -1 && pim_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1) pim_PT2vsz_xQQbins[xBin[j]][QQBin[j]][j]->Fill(pim_z[j], pim_PT2[j]);
-
-if(e_index[j] > -1 && pip_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1 && pip_phihBBin[j] > -1) pip_PT2vsz_xQQphihBbins[xBin[j]][QQBin[j]][pip_phihBBin[j]][j]->Fill(pip_z[j], pip_PT2[j], pip_weight);
-if(e_index[j] > -1 && pim_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1 && pim_phihBBin[j] > -1) pim_PT2vsz_xQQphihBbins[xBin[j]][QQBin[j]][pim_phihBBin[j]][j]->Fill(pim_z[j], pim_PT2[j], pim_weight);
-
-if(e_index[j] > -1 && pip_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1) pip_MX_xQQbins[xBin[j]][QQBin[j]][j]->Fill(MX_epipX[j]);
-if(e_index[j] > -1 && pim_index[j] > -1 && QQ[j] > 1.0 && W[j] > WMin && y[j] < yMax && xBin[j] > -1 && QQBin[j] > -1) pim_MX_xQQbins[xBin[j]][QQBin[j]][j]->Fill(MX_epimX[j]);
-}
-
-if(e_index[1] > -1 && pip_index[1] > -1) pip_zVmom->Fill(p[pip_index[1]], pip_z[1]);
-if(e_index[1] > -1 && pip_index[1] > -1 && MX_epipX[1] > 1.45) pip_zVmom_MXgt145->Fill(p[pip_index[1]], pip_z[1]);
-if(e_index[1] > -1 && pip_index[1] > -1 && MX_epipX[1] > 1.55) pip_zVmom_MXgt155->Fill(p[pip_index[1]], pip_z[1]);
-
-for(int j = 1; j >= ExpOrSim; j--)
-{
-if(pip_keeper[j]) pip_MX_xQQzPT2bins[xBin[j]][QQBin[j]][pip_zBin[j]][pip_PT2Bin[j]][j]->Fill(MX_epipX[j]);
-if(pim_keeper[j]) pim_MX_xQQzPT2bins[xBin[j]][QQBin[j]][pim_zBin[j]][pim_PT2Bin[j]][j]->Fill(MX_epimX[j]);
-}
-
-// phih histos:
-for(int j = 1; j >= ExpOrSim; j--)
-{
-if(pip_keeper[j]) h_pip_phih[xBin[j]][QQBin[j]][pip_zBin[j]][pip_PT2Bin[j]][j]->Fill(pip_phih[j], pip_weight);
-if(pim_keeper[j]) h_pim_phih[xBin[j]][QQBin[j]][pim_zBin[j]][pim_PT2Bin[j]][j]->Fill(pim_phih[j], pim_weight);
-}
-
-// purity:
-if(pip_keeper[0] && pip_keeper[1])
-{
-if(pip_phihBin[0] == pip_phihBin[1]) pip_phih_pure[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]]->Fill(pip_phih[0], pip_weight);
-else pip_phih_impure[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]]->Fill(pip_phih[0], pip_weight);
-}
-
-if(pim_keeper[0] && pim_keeper[1])
-{
-if(pim_phihBin[0] == pim_phihBin[1]) pim_phih_pure[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]]->Fill(pim_phih[0], pim_weight);
-else pim_phih_impure[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]]->Fill(pim_phih[0], pim_weight);
-}
-
-// resolution:
-if(ExpOrSim == 0 && pip_index[0] >= 0 && pip_index[1] >= 0 && V3_pip[0].Mag() > momMin && V3_pip[0].Mag() < momMax)
-{
-int momBin = static_cast<int>((V3_pip[0].Mag() - momMin)/((momMax - momMin)/NmomBins));
-pip_mom_res[momBin]->Fill(V3_pip[0].Mag() - V3_pip[1].Mag());
-pip_theta_res[momBin]->Fill(pi180_inv*V3_pip[0].Theta() - pi180_inv*V3_pip[1].Theta());
-pip_phi_res[momBin]->Fill(pi180_inv*V3_pip[0].Phi() - pi180_inv*V3_pip[1].Phi());
-}
-
-// more resolution:
-//if(ExpOrSim == 0 && xBin[0] >= 0 && QQBin[0] >=0 && pip_zBin[0] >= 0 && pip_PT2Bin[0] >= 0 && xBin[1] >= 0 && QQBin[1] >=0 && pip_zBin[1] >= 0 && pip_PT2Bin[1] >= 0)
-//{
-//float mom = V3_pip[0].Mag();
-//float Dmom = V3_pip[0].Mag() - V3_pip[1].Mag();
-//float Dtheta = V3_pip[0].Theta() - V3_pip[1].Theta();
-//float Dphi = V3_pip[0].Phi() - V3_pip[1].Phi();
-//if(fabs(Dmom) < 3.0*(0.00424 + 0.001184*mom + 0.001945*mom*mom) && fabs(Dtheta) < 3.0*(0.15 + -0.0676*mom + 0.013*mom*mom) && fabs(Dphi) < 3.0*(0.6011 + 0.1176*mom + -0.005821*mom*mom))
-//{
-//pip_PT2_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]]->Fill(pip_PT2[0] - pip_PT2[1]); // see https://clasweb.jlab.org/rungroups/e1/wiki/index.php/Pip_Resolution_Study_-_June_24,_2014 for the above values
-//}
-//}
-
-//   if(ExpOrSim == 0 && xBin[0] >= 0 && QQBin[0] >=0 && pip_zBin[0] >= 0 && pip_PT2Bin[0] >= 0 && pip_phihBin[0] >= 0 && xBin[1] >= 0 && QQBin[1] >=0 && pip_zBin[1] >= 0 && pip_PT2Bin[1] >= 0 && pip_phihBin[1] >= 0)
-//   {
-//   pip_x_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]][pip_phihBin[0]]->Fill(x[0] - x[1]);
-//   pip_QQ_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]][pip_phihBin[0]]->Fill(QQ[0] - QQ[1]);
-//   pip_z_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]][pip_phihBin[0]]->Fill(pip_z[0] - pip_z[1]);
-//   pip_PT2_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]][pip_phihBin[0]]->Fill(pip_PT2[0] - pip_PT2[1]);
-//   pip_phih_res[xBin[0]][QQBin[0]][pip_zBin[0]][pip_PT2Bin[0]][pip_phihBin[0]]->Fill(pip_phih[0] - pip_phih[1]);
-//   }
-//   if(ExpOrSim == 0 && xBin[0] >= 0 && QQBin[0] >=0 && pim_zBin[0] >= 0 && pim_PT2Bin[0] >= 0 && pim_phihBin[0] >= 0 && xBin[1] >= 0 && QQBin[1] >=0 && pim_zBin[1] >= 0 && pim_PT2Bin[1] >= 0 && pim_phihBin[1] >= 0)
-//   {
-//   pim_x_res[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]][pim_phihBin[0]]->Fill(x[0] - x[1]);
-//   pim_QQ_res[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]][pim_phihBin[0]]->Fill(QQ[0] - QQ[1]);
-//   pim_z_res[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]][pim_phihBin[0]]->Fill(pim_z[0] - pim_z[1]);
-//   pim_PT2_res[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]][pim_phihBin[0]]->Fill(pim_PT2[0] - pim_PT2[1]);
-//   pim_phih_res[xBin[0]][QQBin[0]][pim_zBin[0]][pim_PT2Bin[0]][pim_phihBin[0]]->Fill(pim_phih[0] - pim_phih[1]);
-//   }
-
-// %%%%%%%%% end analysis of kinematics %%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if(i%1000 == 0) cout<<"\ranalyzed "<<i/1000<<" thousand events"<<flush;
 } // end if(genExclusiveEvent == 0)
+cout<<endl;
 } // end of loop over entries
-// %%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%% END POTATOES %%%%%
-
-outputfile->Write();
-cout<<endl<<"Done!"<<endl;
-stopwat->Print();
-
 } // end of program
