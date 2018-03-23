@@ -148,144 +148,19 @@ if((mcid[1] == 211 && mcid[2] == 2112) || (mcid[1] == 2112 && mcid[2] == 211)) g
 
 if(genExclusiveEvent == 0)
 {
-cout<<"event #"<<i<<endl;
-
-string currentrunno_string = "-123";
-if(ExpOrSim == 1)
-{
-currentrunno_string = h22chain->GetCurrentFile()->GetName();
-currentrunno_string = currentrunno_string.substr(36,5);
-}
-int currentrunno = atoi(currentrunno_string.c_str()); // converts the string to an int
-
-TLorentzVector V4k(0.0, 0.0, Beam_Energy, Beam_Energy); // x, y, z, t
-TLorentzVector V4ISproton(0.0, 0.0, 0.0, prot_mass); // IS = Initial State
-int e_index[2] = {-123, -123};
-int pip_index[2] = {-123, -123};
-int pim_index[2] = {-123, -123};
-int prot_index[2] = {-123, -123};
-
-// %%%%% get gen. particle indices  %%%%%
-if(ExpOrSim == 0)
-{
-e_index[0] = 0; // the first (zeroth) generated particle is always the scattered electron
-vector<int> genIndices = getGenIndices(mcnentr, mcid, mcp);
-pip_index[0] = genIndices[0];
-pim_index[0] = genIndices[1];
-prot_index[0] = genIndices[2];
-}
-// %%%%% end get gen. particle indices  %%%%%
-
-// %%%%% electron ID %%%%%
-e_index[1] = eID(gpart, q, p, cc_sect, sc_sect, ec_sect, dc_sect, cx, cy, cz, tl1_x, tl1_y, tl3_x, tl3_y, tl3_z, tl3_cx, tl3_cy, tl3_cz, e_zvertex_strict, vz, vy, vx, e_ECsampling_strict, ExpOrSim, etot, e_ECoutVin_strict, ec_ei, ech_x, ech_y, ech_z, e_CCthetaMatching_strict, cc_segm, e_ECgeometric_strict, e_R1fid_strict, e_R3fid_strict, e_CCphiMatching_strict, sc_pd, e_CCfiducial_strict);
-// %%%%% end electron ID %%%%%
-
-cout<<"e- indices (gen rec): "<<e_index[0]<<" "<<e_index[1]<<endl;
-
-// %%%%% set e- 3 and 4 vectors %%%%%
-// can't set the vectors in a loop because gen uses p, theta, phi but rec uses p, cx, cy, cz
-TVector3 V3_e[2]; // 2 for gen(0) and rec(1)
-TLorentzVector V4_e[2];
-
-if(e_index[0] > -122)
-{
-V3_e[0].SetXYZ(mcp[e_index[0]]*cos(pi180*mcphi[e_index[0]])*sin(pi180*mctheta[e_index[0]]), mcp[e_index[0]]*sin(pi180*mcphi[e_index[0]])*sin(pi180*mctheta[e_index[0]]), mcp[e_index[0]]*cos(pi180*mctheta[e_index[0]]));
-V4_e[0].SetXYZT(V3_e[0].X(), V3_e[0].Y(), V3_e[0].Z(), sqrt(V3_e[0].Mag2() + pow(e_mass,2)));
-}
-
-if(e_index[1] > -122)
-{
-V3_e[1].SetXYZ(p[e_index[1]]*cx[e_index[1]], p[e_index[1]]*cy[e_index[1]], p[e_index[1]]*cz[e_index[1]]);
-V4_e[1].SetXYZT(V3_e[1].X(), V3_e[1].Y(), V3_e[1].Z(), sqrt(V3_e[1].Mag2() + pow(e_mass,2)));
-}
-
-TVector3 V3_H[2];
-TLorentzVector V4_q[2], V4_H[2];
-
-for(int j = 1; j >= ExpOrSim; j--)
-{
-V4_q[j] = V4k - V4_e[j];
-V4_H[j] = V4_q[j] + V4ISproton;
-V3_H[j].SetXYZ(V4_H[j].X(), V4_H[j].Y(), V4_H[j].Z());
-}
-// %%%%% end set e- 3 and 4 vectors %%%%%
-
-// %%%%% hadron ID %%%%%
-if(e_index[1] >= 0)
-{
-vector<int> hadronIndices = hadronID(gpart, e_index, q, p, sc_sect, dc_sect, sc_t, sc_r, sc_pd, pip_vvp_strict, pip_R1fid_strict, pip_MXcut_strict, ExpOrSim, ec_ei, ec_sect, cc_sect, nphe, ec_eo, cx, cy, cz, b, tl1_x, tl1_y, mcp, mcphi, mctheta, V4_H, currentrunno, pim_vvp_strict, pim_R1fid_strict, pim_MXcut_strict);
-pip_index[1] = hadronIndices[0];
-pim_index[1] = hadronIndices[1];
-prot_index[1] = hadronIndices[2];
-}
-// %%%%% end hadron ID %%%%%
-
-// %%%%%%%%% set remaining 4-vectors (and 3-vectors)  %%%%%%%%%%%
-// can't set the vectors in a loop because gen uses p, theta, phi but rec uses p, cx, cy, cz
-TVector3 V3_pip[2], V3_pim[2], V3_prot[2]; // 2 for gen(0) and rec(1)
-TLorentzVector V4_pip[2], V4_pim[2], V4_prot[2];
-
-if(pip_index[0] > -122)
-{
-V3_pip[0].SetXYZ(mcp[pip_index[0]]*cos(pi180*mcphi[pip_index[0]])*sin(pi180*mctheta[pip_index[0]]), mcp[pip_index[0]]*sin(pi180*mcphi[pip_index[0]])*sin(pi180*mctheta[pip_index[0]]), mcp[pip_index[0]]*cos(pi180*mctheta[pip_index[0]]));
-V4_pip[0].SetXYZT(V3_pip[0].X(), V3_pip[0].Y(), V3_pip[0].Z(), sqrt(V3_pip[0].Mag2() + pow(pip_mass,2)));
-}
-if(pim_index[0] > -122)
-{
-V3_pim[0].SetXYZ(mcp[pim_index[0]]*cos(pi180*mcphi[pim_index[0]])*sin(pi180*mctheta[pim_index[0]]), mcp[pim_index[0]]*sin(pi180*mcphi[pim_index[0]])*sin(pi180*mctheta[pim_index[0]]), mcp[pim_index[0]]*cos(pi180*mctheta[pim_index[0]]));
-V4_pim[0].SetXYZT(V3_pim[0].X(), V3_pim[0].Y(), V3_pim[0].Z(), sqrt(V3_pim[0].Mag2() + pow(pim_mass,2)));
-}
-if(prot_index[0] > -122)
-{
-V3_prot[0].SetXYZ(mcp[prot_index[0]]*cos(pi180*mcphi[prot_index[0]])*sin(pi180*mctheta[prot_index[0]]), mcp[prot_index[0]]*sin(pi180*mcphi[prot_index[0]])*sin(pi180*mctheta[prot_index[0]]), mcp[prot_index[0]]*cos(pi180*mctheta[prot_index[0]]));
-V4_prot[0].SetXYZT(V3_prot[0].X(), V3_prot[0].Y(), V3_prot[0].Z(), sqrt(V3_prot[0].Mag2() + pow(prot_mass,2)));
-}
-
-if(pip_index[1] > -122)
-{
-V3_pip[1].SetXYZ(p[pip_index[1]]*cx[pip_index[1]], p[pip_index[1]]*cy[pip_index[1]], p[pip_index[1]]*cz[pip_index[1]]);
-V4_pip[1].SetXYZT(V3_pip[1].X(), V3_pip[1].Y(), V3_pip[1].Z(), sqrt(V3_pip[1].Mag2() + pow(pip_mass,2)));
-}
-if(pim_index[1] > -122)
-{
-V3_pim[1].SetXYZ(p[pim_index[1]]*cx[pim_index[1]], p[pim_index[1]]*cy[pim_index[1]], p[pim_index[1]]*cz[pim_index[1]]);
-V4_pim[1].SetXYZT(V3_pim[1].X(), V3_pim[1].Y(), V3_pim[1].Z(), sqrt(V3_pim[1].Mag2() + pow(pim_mass,2)));
-}
-if(prot_index[1] > -122)
-{
-V3_prot[1].SetXYZ(p[prot_index[1]]*cx[prot_index[1]], p[prot_index[1]]*cy[prot_index[1]], p[prot_index[1]]*cz[prot_index[1]]);
-V4_prot[1].SetXYZT(V3_prot[1].X(), V3_prot[1].Y(), V3_prot[1].Z(), sqrt(V3_prot[1].Mag2() + pow(prot_mass,2)));
-}
-
-TLorentzVector V4_pip_prime[2], V4_pim_prime[2], V4_prot_prime[2];
-TLorentzVector V4_X_epipX[2];
-TLorentzVector V4_X_epimX[2];
-
-for(int j = 1; j >= ExpOrSim; j--)
-{
-V4_q[j] = V4k - V4_e[j];
-V4_H[j] = V4_q[j] + V4ISproton;
-V3_H[j].SetXYZ(V4_H[j].X(), V4_H[j].Y(), V4_H[j].Z());
-
-V4_pip_prime[j] = V4_pip[j];
-V4_pip_prime[j].RotateZ(-1.0*V4_q[j].Phi() - pi);
-V4_pip_prime[j].RotateY(V4_q[j].Theta());
-V4_pip_prime[j].Boost(0.0, 0.0, V3_H[j].Mag()/V4_H[j].T());
-
-V4_pim_prime[j] = V4_pim[j];
-V4_pim_prime[j].RotateZ(-1.0*V4_q[j].Phi() - pi);
-V4_pim_prime[j].RotateY(V4_q[j].Theta());
-V4_pim_prime[j].Boost(0.0, 0.0, V3_H[j].Mag()/V4_H[j].T());
-
-V4_prot_prime[j] = V4_prot[j];
-V4_prot_prime[j].RotateZ(-1.0*V4_q[j].Phi() - pi);
-V4_prot_prime[j].RotateY(V4_q[j].Theta());
-V4_prot_prime[j].Boost(0.0, 0.0, V3_H[j].Mag()/V4_H[j].T());
-
-V4_X_epipX[j] = V4_H[j] - V4_pip[j];
-V4_X_epimX[j] = V4_H[j] - V4_pim[j];
-}
-// %%%%%%%%% end set remaining 4-vectors (and 3-vectors)  %%%%%%%%%%%
+	cout<<"event #"<<i<<endl;
+	
+	cout<<"  generated particles:"<<endl;
+	for(int ig = 0; ig < mcnentr; ig++)
+	{
+		cout<<"    "<<mcid[ig]<<": p="<<mcp[ig]<<", theta="<<mctheta[ig]<<", phi="<<mcphi[ig]<<endl;
+	}
+	
+	cout<<endl<<"  reconstructed tracks:"<<endl;
+	for(int ir = 0; ir < gpart; ir++)
+	{
+		cout<<"    q="<<q[ir]<<", p="<<p[ir]<<", cx="<<cx[ir]<<", cy="<<cy[ir]<<", cz="<<cz[ir]<<endl;
+	}
 
 } // end if(genExclusiveEvent == 0)
 cout<<endl;
