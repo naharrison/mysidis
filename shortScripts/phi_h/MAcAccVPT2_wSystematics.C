@@ -30,8 +30,8 @@ hpimM = new TH1F("hpimM", "hpimM", NPT2Bins, PT2Min, PT2Max);
 hpimAc = new TH1F("hpimAc", "hpimAc", NPT2Bins, PT2Min, PT2Max);
 hpimAcc = new TH1F("hpimAcc", "hpimAcc", NPT2Bins, PT2Min, PT2Max);
 
-TFile *MAcAccFile = new TFile("/home/naharrison/mysidis-histos/MAcAcc.root", "READ");
-TFile *sysFile = new TFile("/home/naharrison/mysidis-histos/Total_systematics.root", "READ");
+TFile *MAcAccFile = new TFile("/home/nah/mysidis-histos/MAcAcc.root", "READ");
+TFile *sysFile = new TFile("/home/nah/mysidis-histos/Total_systematics.root", "READ");
 
 /// pip: ///
 for(int k = 0; k < NPT2Bins; k++)
@@ -100,6 +100,10 @@ hpimAcc->SetBinError(k+1, pimAcce);
 }
 
 /// Draw: ///
+can->cd(1)->SetTopMargin(0.08);
+can->cd(1)->SetBottomMargin(0.18);
+can->cd(1)->SetLeftMargin(0.14);
+can->cd(1)->SetRightMargin(0.06);
 can->cd(1)->SetGrid();
 if(Mlog) can->cd(1)->SetLogy();
 hpipM->SetLineColor(kRed);
@@ -109,33 +113,56 @@ if(YscaleOpt == "smart" && !Mlog) hpipM->GetYaxis()->SetRangeUser(-0.2*max(hpipM
 if(YscaleOpt == "fixed") hpipM->GetYaxis()->SetRangeUser(-2000, 12500);
 hpipM->SetTitle(Form("A_{0} for #pi+ (red circ.) and #pi- (bl. tri.), x%i QQ%i z%i", xBin, QQBin, zBin));
 hpipM->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
+hpipM->GetXaxis()->SetTitleSize(0.05);
+hpipM->GetXaxis()->SetLabelSize(0.05);
+hpipM->GetYaxis()->SetLabelSize(0.05);
+hpipM->SetLineWidth(2);
 hpipM->Draw("same E1");
 hpimM->SetLineColor(kBlue);
 hpimM->SetMarkerStyle(iMarkerStyle_pim);
+hpimM->SetLineWidth(2);
 hpimM->Draw("same E1");
 
+can->cd(2)->SetTopMargin(0.08);
+can->cd(2)->SetBottomMargin(0.18);
+can->cd(2)->SetLeftMargin(0.14);
+can->cd(2)->SetRightMargin(0.06);
 can->cd(2)->SetGrid();
 hpipAc->SetLineColor(kRed);
 hpipAc->SetMarkerStyle(iMarkerStyle_pip);
 if(YscaleOpt == "smart") hpipAc->GetYaxis()->SetRangeUser(min(hpipAc->GetMinimum(), hpimAc->GetMinimum()) - 0.20, max(hpipAc->GetMaximum(), hpimAc->GetMaximum()) + 0.1);
 if(YscaleOpt == "fixed") hpipAc->GetYaxis()->SetRangeUser(-0.42, 0.3);
-hpipAc->SetTitle(Form("A^{cos#phi}_{UU} for #pi+ and #pi-, x%i QQ%i z%i", xBin, QQBin, zBin));
+hpipAc->SetTitle(Form("A^{cos#phi_{h}}_{UU} for #pi+ (red circ.) and #pi- (bl. tri.), x%i QQ%i z%i", xBin, QQBin, zBin));
 hpipAc->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
+hpipAc->GetXaxis()->SetTitleSize(0.05);
+hpipAc->GetXaxis()->SetLabelSize(0.05);
+hpipAc->GetYaxis()->SetLabelSize(0.05);
+hpipAc->SetLineWidth(2);
 hpipAc->Draw("same E1");
 hpimAc->SetLineColor(kBlue);
 hpimAc->SetMarkerStyle(iMarkerStyle_pim);
+hpimAc->SetLineWidth(2);
 hpimAc->Draw("same E1");
 
+can->cd(3)->SetTopMargin(0.08);
+can->cd(3)->SetBottomMargin(0.18);
+can->cd(3)->SetLeftMargin(0.14);
+can->cd(3)->SetRightMargin(0.06);
 can->cd(3)->SetGrid();
 hpipAcc->SetLineColor(kRed);
 hpipAcc->SetMarkerStyle(iMarkerStyle_pip);
 if(YscaleOpt == "smart") hpipAcc->GetYaxis()->SetRangeUser(min(hpipAcc->GetMinimum(), hpimAcc->GetMinimum()) - 0.20, max(hpipAcc->GetMaximum(), hpimAcc->GetMaximum()) + 0.1);
 if(YscaleOpt == "fixed") hpipAcc->GetYaxis()->SetRangeUser(-0.4, 0.42);
-hpipAcc->SetTitle(Form("A^{cos2#phi}_{UU} for #pi+ and #pi-, x%i QQ%i z%i", xBin, QQBin, zBin));
+hpipAcc->SetTitle(Form("A^{cos2#phi_{h}}_{UU} for #pi+ (red circ.) and #pi- (bl. tri.), x%i QQ%i z%i", xBin, QQBin, zBin));
 hpipAcc->GetXaxis()->SetTitle("P_{h#perp}^{2} (GeV^{2})");
+hpipAcc->GetXaxis()->SetTitleSize(0.05);
+hpipAcc->GetXaxis()->SetLabelSize(0.05);
+hpipAcc->GetYaxis()->SetLabelSize(0.05);
+hpipAcc->SetLineWidth(2);
 hpipAcc->Draw("same E1");
 hpimAcc->SetLineColor(kBlue);
 hpimAcc->SetMarkerStyle(iMarkerStyle_pim);
+hpimAcc->SetLineWidth(2);
 hpimAcc->Draw("same E1");
 
 ///////////////////////////// systematics: //////////////////////
@@ -277,5 +304,7 @@ can->cd(2);
 zeroLine->Draw();
 can->cd(3);
 zeroLine->Draw();
+
+//can->SaveAs(Form("PLOT_%i_%i_%i.png", xBin, QQBin, zBin));
 
 }
