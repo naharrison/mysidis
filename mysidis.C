@@ -18,8 +18,14 @@ void mysidis(int e_zvertex_strict = 0, int e_ECsampling_strict = 0, int e_ECoutV
 {
 int MCversion = 12;
 int filestart = 1;
-int Nfiles = 5;
+int Nfiles = 1;
 int ExpOrSim = 0; // 0(MC) or 1(data)
+
+// %%%%% define some historams %%%%%
+TH1F *hpres = new TH1F("hpres", "hpres", 100, -0.1, 0.1);
+TH1F *hthetares = new TH1F("hthetares", "hthetares", 100, -0.02, 0.02);
+TH1F *hphires = new TH1F("hphires", "hphires", 100, -0.1, 0.1);
+// %%%% end define historams %%%%%%%
 
 // %%%%% some cut values %%%%%
 float WMin = 2.05;
@@ -138,31 +144,58 @@ h22chain->SetBranchAddress("nphe", nphe);
 // %%%%%%%%%%%%%%%%%%%%
 for(int i = 0; i < h22chain->GetEntries(); i++) // loop over entries
 {
-h22chain->GetEntry(i);
+  h22chain->GetEntry(i);
 
-bool genExclusiveEvent = 0; // if the generated event is an exclusive event, i.e. ep --> e pi+ n, we don't want to analyze it at all (the generator give unrealistic kinematics)
-if(ExpOrSim == 0 && mcnentr == 3)
-{
-if((mcid[1] == 211 && mcid[2] == 2112) || (mcid[1] == 2112 && mcid[2] == 211)) genExclusiveEvent = 1; // the first (zeroth) generated particle is always the scattered electron
-}
+  cout << "event #" << i << endl;
 
-if(genExclusiveEvent == 0)
-{
-	cout<<"event #"<<i<<endl;
-	
-	cout<<"  generated particles:"<<endl;
-	for(int ig = 0; ig < mcnentr; ig++)
-	{
-		cout<<"    "<<mcid[ig]<<": p="<<mcp[ig]<<", theta="<<mctheta[ig]<<", phi="<<mcphi[ig]<<endl;
-	}
-	
-	cout<<endl<<"  reconstructed tracks:"<<endl;
-	for(int ir = 0; ir < gpart; ir++)
-	{
-		cout<<"    q="<<q[ir]<<", p="<<p[ir]<<", cx="<<cx[ir]<<", cy="<<cy[ir]<<", cz="<<cz[ir]<<endl;
-	}
+  cout << "  generated particles:" << endl;
+  for(int ig = 0; ig < mcnentr; ig++) {
+    TVector3 vec3 = TVector3(1.0, 1.0, 1.0);
+    vec3.SetTheta((3.14159/180.0)*mctheta[ig]);
+    vec3.SetPhi((3.14159/180.0)*mcphi[ig]);
+    vec3.SetMag(mcp[ig]);
+    cout << "    " << mcid[ig] << ": p=" << vec3.Mag() << ", theta=" << vec3.Theta() << ", phi=" << vec3.Phi() << endl;
+  }
 
-} // end if(genExclusiveEvent == 0)
-cout<<endl;
+
+  cout << endl << "  reconstructed tracks:" << endl;
+  for(int ir = 0; ir < gpart; ir++) {
+    TVector3 vec3 = TVector3(p[ir]*cx[ir], p[ir]*cy[ir],p[ir]*cz[ir]);
+    cout << "    q=" << q[ir] << ", p=" << vec3.Mag() << ", theta=" << vec3.Theta() << ", phi=" << vec3.Phi() << endl;
+  }
+
+
+  cout << endl << "  comparison of gen and rec:" << endl;
+  for(int ig = 0; ig < mcnentr; ig++) {
+    for(int ir = 0; ir < gpart; ir++) {
+      cout << "    g" << ig << " r" << ir << " comparison: ";
+
+      TVector3 rvec3 = TVector3(p[ir]*cx[ir], p[ir]*cy[ir],p[ir]*cz[ir]);
+      TVector3 gvec3 = TVector3(1.0, 1.0, 1.0);
+      gvec3.SetTheta((3.14159/180.0)*mctheta[ig]);
+      gvec3.SetPhi((3.14159/180.0)*mcphi[ig]);
+      gvec3.SetMag(mcp[ig]);
+
+      if(fabs(gvec3.Mag() - rvec3.Mag()) < 0.04 && fabs(gvec3.Theta()-rvec3.Theta()) < 0.007 && fabs(gvec3.Phi()-rvec3.Phi()) < 0.05) cout << "the momenta are close" << endl;
+      else cout << "the momenta are not close" << endl;
+
+      hpres->Fill(gvec3.Mag() - rvec3.Mag());
+      hthetares->Fill(gvec3.Theta() - rvec3.Theta());
+      hphires->Fill(gvec3.Phi() - rvec3.Phi());
+    }
+  }
+
+  
+  cout << endl;
+
 } // end of loop over entries
+
+
+hpres->Draw();
+new TCanvas();
+hthetares->Draw();
+new TCanvas();
+hphires->Draw();
+
+
 } // end of program

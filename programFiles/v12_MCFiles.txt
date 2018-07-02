@@ -1,5 +1,1 @@
-/media/sf_vmshared/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.0.dat.gsimout.bos.root
-/media/sf_vmshared/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.1.dat.gsimout.bos.root
-/media/sf_vmshared/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.2.dat.gsimout.bos.root
-/media/sf_vmshared/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.3.dat.gsimout.bos.root
-/media/sf_vmshared/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.4.dat.gsimout.bos.root
+/home/nah/data-samples/e1f/round0_clasdispr.00.e5.498.emin.75tmin.09.xs31.83nb.dis.0.dat.gsimout.bos.root
