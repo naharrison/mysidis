@@ -12,7 +12,7 @@
 #include "programFiles/functions.C"
 #include "programFiles/eID.C"
 #include "programFiles/hadronID.C"
-#include "programFiles/getGenIndices.C"
+#include "programFiles/pidFunctions.C"
 
 void mysidis(int e_zvertex_strict = 0, int e_ECsampling_strict = 0, int e_ECoutVin_strict = 0, int e_ECgeometric_strict = 0, int e_CCthetaMatching_strict = 0, int e_R1fid_strict = 0, int e_R3fid_strict = 0, int e_CCphiMatching_strict = 0, int e_CCfiducial_strict = 0, int yCut_strict = 0, int pip_vvp_strict = 0, int pip_R1fid_strict = 0, int pip_MXcut_strict = 0, int pim_vvp_strict = 0, int pim_R1fid_strict = 0, int pim_MXcut_strict = 0)
 {
@@ -146,47 +146,43 @@ for(int i = 0; i < h22chain->GetEntries(); i++) // loop over entries
 {
   h22chain->GetEntry(i);
 
-  cout << "event #" << i << endl;
+  int genPip_i = getIndexOfPid(211, mcnentr, mcid);
+  int genKp_i = getIndexOfPid(321, mcnentr, mcid);
+  int genP_i = getIndexOfPid(2212, mcnentr, mcid);
+  int genPos_i = getIndexOfPid(-11, mcnentr, mcid);
 
-  cout << "  generated particles:" << endl;
-  for(int ig = 0; ig < mcnentr; ig++) {
-    TVector3 vec3 = TVector3(1.0, 1.0, 1.0);
-    vec3.SetTheta((3.14159/180.0)*mctheta[ig]);
-    vec3.SetPhi((3.14159/180.0)*mcphi[ig]);
-    vec3.SetMag(mcp[ig]);
-    cout << "    " << mcid[ig] << ": p=" << vec3.Mag() << ", theta=" << vec3.Theta() << ", phi=" << vec3.Phi() << endl;
+  int recE_i = getIndexOfMatch(-1, mcp[0], mctheta[0], mcphi[0], gpart, q, p, cx, cy, cz);
+
+  int recPip_i = -123;
+  if(genPip_i > -1) recPip_i = getIndexOfMatch(1, mcp[genPip_i], mctheta[genPip_i], mcphi[genPip_i], gpart, q, p, cx, cy, cz);
+
+  int recKp_i = -123;
+  if(genKp_i > -1) recKp_i = getIndexOfMatch(1, mcp[genKp_i], mctheta[genKp_i], mcphi[genKp_i], gpart, q, p, cx, cy, cz);
+
+  int recP_i = -123;
+  if(genP_i > -1) recP_i = getIndexOfMatch(1, mcp[genP_i], mctheta[genP_i], mcphi[genP_i], gpart, q, p, cx, cy, cz);
+
+  int recPos_i = -123;
+  if(genPos_i > -1) recPos_i = getIndexOfMatch(1, mcp[genPos_i], mctheta[genPos_i], mcphi[genPos_i], gpart, q, p, cx, cy, cz);
+
+
+  if(recE_i > -1 && recPip_i > -1) {
+    printInfo(recE_i, recPip_i, 211, gpart, p, cx, cy, cz, sc_t, sc_r, ec_ei, ec_eo, nphe);
+  }
+
+  if(recE_i > -1 && recKp_i > -1) {
+    printInfo(recE_i, recKp_i, 321, gpart, p, cx, cy, cz, sc_t, sc_r, ec_ei, ec_eo, nphe);
+  }
+
+  if(recE_i > -1 && recP_i > -1) {
+    printInfo(recE_i, recP_i, 2212, gpart, p, cx, cy, cz, sc_t, sc_r, ec_ei, ec_eo, nphe);
+  }
+
+  if(recE_i > -1 && recPos_i > -1) {
+    printInfo(recE_i, recPos_i, -11, gpart, p, cx, cy, cz, sc_t, sc_r, ec_ei, ec_eo, nphe);
   }
 
 
-  cout << endl << "  reconstructed tracks:" << endl;
-  for(int ir = 0; ir < gpart; ir++) {
-    TVector3 vec3 = TVector3(p[ir]*cx[ir], p[ir]*cy[ir],p[ir]*cz[ir]);
-    cout << "    q=" << q[ir] << ", p=" << vec3.Mag() << ", theta=" << vec3.Theta() << ", phi=" << vec3.Phi() << endl;
-  }
-
-
-  cout << endl << "  comparison of gen and rec:" << endl;
-  for(int ig = 0; ig < mcnentr; ig++) {
-    for(int ir = 0; ir < gpart; ir++) {
-      cout << "    g" << ig << " r" << ir << " comparison: ";
-
-      TVector3 rvec3 = TVector3(p[ir]*cx[ir], p[ir]*cy[ir],p[ir]*cz[ir]);
-      TVector3 gvec3 = TVector3(1.0, 1.0, 1.0);
-      gvec3.SetTheta((3.14159/180.0)*mctheta[ig]);
-      gvec3.SetPhi((3.14159/180.0)*mcphi[ig]);
-      gvec3.SetMag(mcp[ig]);
-
-      if(fabs(gvec3.Mag() - rvec3.Mag()) < 0.04 && fabs(gvec3.Theta()-rvec3.Theta()) < 0.007 && fabs(gvec3.Phi()-rvec3.Phi()) < 0.05) cout << "the momenta are close" << endl;
-      else cout << "the momenta are not close" << endl;
-
-      hpres->Fill(gvec3.Mag() - rvec3.Mag());
-      hthetares->Fill(gvec3.Theta() - rvec3.Theta());
-      hphires->Fill(gvec3.Phi() - rvec3.Phi());
-    }
-  }
-
-  
-  cout << endl;
 
 } // end of loop over entries
 
