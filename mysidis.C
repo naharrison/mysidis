@@ -14,11 +14,10 @@
 #include "programFiles/hadronID.C"
 #include "programFiles/pidFunctions.C"
 
-void mysidis(int e_zvertex_strict = 0, int e_ECsampling_strict = 0, int e_ECoutVin_strict = 0, int e_ECgeometric_strict = 0, int e_CCthetaMatching_strict = 0, int e_R1fid_strict = 0, int e_R3fid_strict = 0, int e_CCphiMatching_strict = 0, int e_CCfiducial_strict = 0, int yCut_strict = 0, int pip_vvp_strict = 0, int pip_R1fid_strict = 0, int pip_MXcut_strict = 0, int pim_vvp_strict = 0, int pim_R1fid_strict = 0, int pim_MXcut_strict = 0)
+void mysidis()
 {
 int MCversion = 12;
-int filestart = 1;
-int Nfiles = 1;
+int Nfiles = 100;
 int ExpOrSim = 0; // 0(MC) or 1(data)
 
 // %%%%% define some historams %%%%%
@@ -27,28 +26,17 @@ TH1F *hthetares = new TH1F("hthetares", "hthetares", 100, -0.02, 0.02);
 TH1F *hphires = new TH1F("hphires", "hphires", 100, -0.1, 0.1);
 // %%%% end define historams %%%%%%%
 
-// %%%%% some cut values %%%%%
-float WMin = 2.05;
-float yMax = 0.85; // default value (for when yCut_strict = 0)
-if(yCut_strict == 1) yMax = 0.8;
-// %%%%% end some cut values %%%%%
-
 // %%%%% read the input files into a TChain %%%%%
-int NtotalFiles = 5;
-
 ifstream filelist;
 if(ExpOrSim == 0) filelist.open(Form("programFiles/v%i_MCFiles.txt", MCversion));
 else filelist.open("programFiles/dataFiles.txt");
 
 TChain *h22chain = new TChain("h22");
 
-int kStop = Nfiles + filestart;
-if(kStop > NtotalFiles+1) kStop = NtotalFiles+1;
-for(int k = 1; k < kStop; k++)
-{
-string filename;
-filelist>>filename;
-if(k >= filestart) h22chain->Add(filename.c_str());
+for(int k = 0; k < Nfiles; k++) {
+  string filename;
+  filelist>>filename;
+  h22chain->Add(filename.c_str());
 }
 // %%%%% end read the input files into a TChain %%%%%
 

@@ -44,6 +44,11 @@ void printInfo(Int_t eIndex, Int_t hadIndex, Int_t hadID, Int_t gpart, Float_t p
 
   TVector3 had3 = TVector3(p[hadIndex]*cx[hadIndex], p[hadIndex]*cy[hadIndex],p[hadIndex]*cz[hadIndex]);
 
-  cout << hadID << "," << p[hadIndex] << "," << had3.Theta() << "," << velocity << "," << nphe[hadIndex] << "," << ec_ei[hadIndex] << "," << ec_eo[hadIndex] << endl;
+  // if statements are loose cuts to remove a small number of unrealistic outliers
+  if(p[hadIndex] > 0.21 && p[hadIndex] < 5.3 && had3.Theta() > 0.088 && had3.Theta() < 2.22 && velocity > 0 && velocity < 1.5) {
+    if(nphe[hadIndex] >= 0 && nphe[hadIndex] < 350 && ec_ei[hadIndex] >= 0 && ec_ei[hadIndex] < 0.9 && ec_eo[hadIndex] >= 0 && ec_eo[hadIndex] < 1.1) {
+      cout << hadID << "," << p[hadIndex] << "," << had3.Theta() << "," << velocity << "," << nphe[hadIndex] << "," << ec_ei[hadIndex] << "," << ec_eo[hadIndex] << endl;
+    }
+  }
 
 }
