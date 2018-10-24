@@ -10,8 +10,6 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "programFiles/functions.C"
-#include "programFiles/eID.C"
-#include "programFiles/hadronID.C"
 #include "programFiles/pidFunctions.C"
 
 void mysidis()
@@ -19,12 +17,6 @@ void mysidis()
 int MCversion = 12;
 int Nfiles = 100;
 int ExpOrSim = 0; // 0(MC) or 1(data)
-
-// %%%%% define some historams %%%%%
-TH1F *hpres = new TH1F("hpres", "hpres", 100, -0.1, 0.1);
-TH1F *hthetares = new TH1F("hthetares", "hthetares", 100, -0.02, 0.02);
-TH1F *hphires = new TH1F("hphires", "hphires", 100, -0.1, 0.1);
-// %%%% end define historams %%%%%%%
 
 // %%%%% read the input files into a TChain %%%%%
 ifstream filelist;
@@ -173,13 +165,6 @@ for(int i = 0; i < h22chain->GetEntries(); i++) // loop over entries
 
 
 } // end of loop over entries
-
-
-hpres->Draw();
-new TCanvas();
-hthetares->Draw();
-new TCanvas();
-hphires->Draw();
 
 
 } // end of program
